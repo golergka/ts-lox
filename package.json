@@ -14,11 +14,6 @@
     "test": "jest",
     "start": "npm run build && node -r source-map-support/register .build/index.js"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "*.ts": "eslint --fix"
   },
