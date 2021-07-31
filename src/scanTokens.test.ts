@@ -1,10 +1,9 @@
-import { Scanner } from './Scanner'
+import { scanTokens } from './scanTokens'
 import { Token } from './Token'
 
 describe('Scanner', () => {
 	it('scans single token', () => {
-		const scanner = new Scanner('(')
-		const tokens = scanner.scanTokens()
+		const tokens = scanTokens('(')
 		expect(tokens).toEqual([
 			new Token('LEFT_PAREN', '(', undefined, 1),
 			new Token('EOF', '', undefined, 1)
@@ -13,8 +12,7 @@ describe('Scanner', () => {
 
 	describe('line comments', () => {
 		it('inbetween tokens', () => {
-			const scanner = new Scanner('(\n' + '//abc\n' + ')')
-			const tokens = scanner.scanTokens()
+			const tokens = scanTokens('(\n' + '//abc\n' + ')')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 3),
@@ -25,8 +23,7 @@ describe('Scanner', () => {
 
 	describe('block comments', () => {
 		it('inbetween tokens', () => {
-			const scanner = new Scanner('(/*abc*/)')
-			const tokens = scanner.scanTokens()
+			const tokens = scanTokens('(/*abc*/)')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 1),
@@ -34,8 +31,7 @@ describe('Scanner', () => {
 			])
 		})
 		it('after tokens', () => {
-			const scanner = new Scanner('(/*abc*/')
-			const tokens = scanner.scanTokens()
+			const tokens = scanTokens('(/*abc*/')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('EOF', '', undefined, 1)
@@ -45,8 +41,7 @@ describe('Scanner', () => {
 
 	describe('identifier', () => {
 		it(`on it's own`, () => {
-			const scanner = new Scanner('identifier')
-			const tokens = scanner.scanTokens()
+			const tokens = scanTokens('identifier')
 			expect(tokens).toEqual([
 				new Token('IDENTIFIER', 'identifier', undefined, 1),
 				new Token('EOF', '', undefined, 1)

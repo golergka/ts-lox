@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
-import { Scanner } from './Scanner'
+import { scanTokens } from './scanTokens'
 
 let hadError = false
 
@@ -31,8 +31,7 @@ export async function runPrompt() {
 }
 
 function run(source: string, filename?: string) {
-	const scanner = new Scanner(source)
-	const tokens = scanner.scanTokens()
+	const tokens = scanTokens(source)
 	
 	for (const token of tokens) {
 		console.log(token)
