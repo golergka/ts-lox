@@ -8,5 +8,6 @@ if (restArgs.length > 0) {
 } else if (filename) {
 	runFile(filename)
 } else {
+	console.log('REPL mode')
 	runPrompt()
 }
