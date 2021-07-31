@@ -1,4 +1,4 @@
-type TokenType =
+export type TokenType =
     // Single-character tokens.
     | "LEFT_PAREN"
     | "RIGHT_PAREN"
