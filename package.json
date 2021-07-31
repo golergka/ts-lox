@@ -11,7 +11,8 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "generate_ast": "ts-node src/generateAst.ts src/generated"
   },
   "lint-staged": {
     "*.ts": "eslint --fix"
