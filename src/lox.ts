@@ -30,7 +30,7 @@ export async function runPrompt() {
 	}
 }
 
-function run(source: string) {
+function run(source: string, filename?: string) {
 	const scanner = new Scanner(source)
 	const tokens = scanner.scanTokens()
 	
