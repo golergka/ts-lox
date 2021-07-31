@@ -154,7 +154,7 @@ export class Scanner {
 			this.scanToken()
 		}
 
-		this.tokens.push(new Token('EOF', '', null, this.line))
+		this.tokens.push(new Token('EOF', '', undefined, this.line))
 		return this.tokens
 	}
 }
