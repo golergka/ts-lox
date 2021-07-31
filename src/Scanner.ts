@@ -1,6 +1,6 @@
 import { report } from './lox'
 import { Token } from './Token'
-import { TokenType } from './TokenType'
+import { keywords, TokenType } from './TokenType'
 
 export class Scanner {
 	public constructor(private readonly source: string) {}
@@ -66,13 +66,21 @@ export class Scanner {
 			default:
 				return this.isDigit(c)
 					? this.number()
-					: report(this.line, 'Unexpected character.')
+					: this.isAlpha(c)
+                    ? this.identifier()
+                    : report(this.line, 'Unexpected character.')
 		}
 	}
 
-	isDigit(c: string) {
-		return c >= '0' && c <= '9'
-	}
+	isDigit = (c: string) => c >= '0' && c <= '9'
+    
+    isAlpha = (c: string) =>
+        (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        c == '_'
+        
+    isAlphaNumeric = (c: string) =>
+        this.isAlpha(c) || this.isDigit(c)
 
 	string() {
 		while (this.peek() != '"' && this.isAtEnd()) {
@@ -106,6 +114,13 @@ export class Scanner {
 			Number.parseFloat(this.source.substring(this.start, this.current))
 		)
 	}
+    
+    identifier() {
+        while (this.isAlphaNumeric(this.peek())) this.advance()
+        const text = this.source.substring(this.start, this.current)
+        const type = keywords[text] || 'IDENTIFIER'
+        this.addToken(type)
+    }
 
 	peek() {
 		if (this.isAtEnd()) return '\0'
