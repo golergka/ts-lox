@@ -21,14 +21,18 @@ async function defineAst(outputDir: string, baseName: string, types: string[]) {
 	try {
         await file.write(`import { Token } from '../Token'\n`)
         await file.write('\n')
+        const typeNames = []
 		for (const type of types) {
 			const [rawClassname, rawFieldList] = type.split(':')
 			const typeName = rawClassname.trim()
+            typeNames.push(typeName)
 			const fields = rawFieldList.trim().split(', ')
-			await defineType(file, baseName, typeName, fields)
+			await defineType(file, typeName, fields)
 		}
-		await file.write(`export interface ${baseName} {\n`)
-		await file.write('}\n')
+		await file.write(`export type ${baseName} =\n`)
+        for (const typeName of typeNames) {
+            await file.write(`    | ${typeName}\n`)
+        }
 	} finally {
 		await file.close()
 	}
@@ -36,11 +40,11 @@ async function defineAst(outputDir: string, baseName: string, types: string[]) {
 
 async function defineType(
 	file: fs.FileHandle,
-	baseName: string,
 	typeName: string,
 	fields: string[]
 ) {
 	await file.write(`export interface ${typeName} {\n`)
+    await file.write(`    type: '${typeName.toLowerCase()}'\n`)
 	for (const field of fields) {
 		const [type, name] = field.split(' ')
 		await file.write(`    ${name}: ${type}\n`)
