@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
+import { Scanner } from './Scanner'
 
 const [_node, _exec, filename, ...restArgs] = process.argv
 
