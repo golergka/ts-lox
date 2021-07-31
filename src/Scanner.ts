@@ -49,6 +49,10 @@ export class Scanner {
 				if (this.match('/')) {
 					// A comment goes until the end of the line
 					while (this.peek() != '\n' && !this.isAtEnd()) this.advance()
+                } else if (this.match('*')) {
+                    while (this.peek() != '*' && this.peekNext() != '/') this.advance()
+                    this.advance()
+                    this.advance()
 				} else {
 					this.addToken('SLASH')
 				}
