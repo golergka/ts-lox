@@ -64,8 +64,14 @@ export class Scanner {
 			case '"':
 				return this.string()
 			default:
-				return report(this.line, 'Unexpected character')
+				return this.isDigit(c)
+					? this.number()
+					: report(this.line, 'Unexpected character.')
 		}
+	}
+
+	isDigit(c: string) {
+		return c >= '0' && c <= '9'
 	}
 
 	string() {
@@ -76,20 +82,39 @@ export class Scanner {
 
 		if (this.isAtEnd()) {
 			report(this.line, 'Unterminated string.')
-            return
+			return
 		}
-        
-        // The closing "."
-        this.advance()
-        
-        // Trim the surrounding quotes.
-        const value = this.source.substring(this.start + 1, this.current - 1)
-        this.addToken('STRING', value)
+
+		// The closing "."
+		this.advance()
+
+		// Trim the surrounding quotes.
+		const value = this.source.substring(this.start + 1, this.current - 1)
+		this.addToken('STRING', value)
+	}
+
+	number() {
+		while (this.isDigit(this.peek())) this.advance()
+
+		if (this.peek() == '.' && this.isDigit(this.peekNext())) {
+			this.advance()
+			while (this.isDigit(this.peek())) this.advance()
+		}
+
+		this.addToken(
+			'NUMBER',
+			Number.parseFloat(this.source.substring(this.start, this.current))
+		)
 	}
 
 	peek() {
 		if (this.isAtEnd()) return '\0'
 		return this.source.charAt(this.current)
+	}
+
+	peekNext() {
+		if (this.current + 1 >= this.source.length) return '\0'
+		return this.source.charAt(this.current + 1)
 	}
 
 	match(expected: string) {
