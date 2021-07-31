@@ -15,24 +15,35 @@ defineAst(outputDir, 'Expr', [
 	'Unary    : Token operator, Expr right'
 ])
 
-async function defineAst(outputDir: string, baseName: string, types: string[]) {
+async function defineAst(
+	outputDir: string,
+	baseName: string,
+	typeLines: string[]
+) {
+	const types = typeLines.map((line) => {
+		const [rawClassname, rawFieldList] = line.split(':')
+		const name = rawClassname.trim()
+		const fields: [type: string, name: string][] = rawFieldList
+			.trim()
+			.split(', ')
+			.map((rawField) => {
+				const [type, name] = rawField.split(' ')
+				return [type, name]
+			})
+		return { name, fields }
+	})
 	const path = join(process.cwd(), outputDir + '/' + baseName + '.ts')
 	const file = await fs.open(path, 'w')
 	try {
-        await file.write(`import { Token } from '../Token'\n`)
-        await file.write('\n')
-        const typeNames = []
-		for (const type of types) {
-			const [rawClassname, rawFieldList] = type.split(':')
-			const typeName = rawClassname.trim()
-            typeNames.push(typeName)
-			const fields = rawFieldList.trim().split(', ')
-			await defineType(file, typeName, fields)
+		await file.write(`import { Token } from '../Token'\n`)
+		await file.write('\n')
+		for (const { name, fields } of types) {
+			await defineType(file, name, fields)
 		}
 		await file.write(`export type ${baseName} =\n`)
-        for (const typeName of typeNames) {
-            await file.write(`    | ${typeName}\n`)
-        }
+		for (const typeName of types.map((t) => t.name)) {
+			await file.write(`    | ${typeName}\n`)
+		}
 	} finally {
 		await file.close()
 	}
@@ -41,14 +52,13 @@ async function defineAst(outputDir: string, baseName: string, types: string[]) {
 async function defineType(
 	file: fs.FileHandle,
 	typeName: string,
-	fields: string[]
+	fields: [type: string, name: string][]
 ) {
 	await file.write(`export interface ${typeName} {\n`)
-    await file.write(`    type: '${typeName.toLowerCase()}'\n`)
-	for (const field of fields) {
-		const [type, name] = field.split(' ')
+	await file.write(`    type: '${typeName.toLowerCase()}'\n`)
+	for (const [type, name] of fields) {
 		await file.write(`    ${name}: ${type}\n`)
 	}
 	await file.write(`}\n`)
-    await file.write('\n')
+	await file.write('\n')
 }
