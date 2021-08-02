@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1627919641293" clover="3.2.0">
+  <project timestamp="1627919641293" name="All files">
+    <metrics statements="27" coveredstatements="24" conditionals="12" coveredconditionals="8" methods="10" coveredmethods="9" elements="49" coveredelements="41" complexity="0" loc="27" ncloc="27" packages="2" files="4" classes="4"/>
+    <package name="src">
+      <metrics statements="19" coveredstatements="16" conditionals="12" coveredconditionals="8" methods="6" coveredmethods="5"/>
+      <file name="Token.ts" path="/Users/golergka/Projects/lox-ts/src/Token.ts">
+        <metrics statements="6" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="1"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="5" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="7" count="5" type="stmt"/>
+        <line num="8" count="5" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+      </file>
+      <file name="printExpr.ts" path="/Users/golergka/Projects/lox-ts/src/printExpr.ts">
+        <metrics statements="7" coveredstatements="7" conditionals="6" coveredconditionals="5" methods="3" coveredmethods="3"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="10" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+      </file>
+      <file name="rpnExpr.ts" path="/Users/golergka/Projects/lox-ts/src/rpnExpr.ts">
+        <metrics statements="6" coveredstatements="4" conditionals="6" coveredconditionals="3" methods="1" coveredmethods="1"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="7" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="14" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="16" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.generated">
+      <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+      <file name="Expr.ts" path="/Users/golergka/Projects/lox-ts/src/generated/Expr.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="15" count="4" type="stmt"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="42" count="2" type="stmt"/>
+        <line num="45" count="6" type="stmt"/>
+        <line num="57" count="2" type="stmt"/>
+        <line num="61" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
