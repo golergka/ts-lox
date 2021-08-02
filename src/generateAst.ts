@@ -11,7 +11,7 @@ if (restArgs.length > 0 || !outputDir) {
 defineAst(outputDir, 'Expr', [
 	'Binary   : Expr left, Token operator, Expr right',
 	'Grouping : Expr expression',
-	'Literal  : Object value',
+	'Literal  : Object|null value',
 	'Unary    : Token operator, Expr right'
 ])
 

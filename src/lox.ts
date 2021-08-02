@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
 import { scanTokens } from './scanTokens'
+import { Token } from './Token'
 
 let hadError = false
 
@@ -45,4 +46,12 @@ export function report(line: number, arg1: string, arg2?: string) {
 	const message = arg2 || arg1
 	console.log(`[line ${line}] Error${where}: ${message}`)
 	hadError = true
+}
+
+export function loxError(token: Token, message: string) {
+	if (token.type === 'EOF') {
+		report(token.line, " at end", message)
+	} else {
+		report(token.line, ` at '${token.lexeme}'`, message)
+	}
 }

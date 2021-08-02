@@ -36,11 +36,11 @@ export function groupingExpr(
 
 export interface LiteralExpr {
     type: 'literal'
-    value: Object
+    value: Object|null
 }
 
 export function literalExpr(
-    value: Object,
+    value: Object|null,
 ): LiteralExpr {
     return {
         type: 'literal',
