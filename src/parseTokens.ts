@@ -1,4 +1,3 @@
-import { isArrayTypeNode, isContinueStatement } from 'typescript'
 import {
 	binaryExpr,
 	Expr,
@@ -6,7 +5,7 @@ import {
 	literalExpr,
 	unaryExpr
 } from './generated/Expr'
-import { loxError, report } from './lox'
+import { loxError } from './lox'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
@@ -116,6 +115,8 @@ export function parseTokens(tokens: Token[]) {
 	function expression() {
 		return equality()
 	}
+	
+	const expressionSeries = makeBinary(expression, 'COMMA')
 
 	function synchronize() {
 		advance()
@@ -140,7 +141,7 @@ export function parseTokens(tokens: Token[]) {
 	}
     
     try {
-        return expression()
+        return expressionSeries()
     } catch (e) {
         if (e instanceof ParseError) {
             return null

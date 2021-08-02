@@ -2,10 +2,31 @@ import { scanTokens } from './scanTokens'
 import { Token } from './Token'
 
 describe('Scanner', () => {
-	it('scans single token', () => {
+	it('single token', () => {
 		const tokens = scanTokens('(')
 		expect(tokens).toEqual([
 			new Token('LEFT_PAREN', '(', undefined, 1),
+			new Token('EOF', '', undefined, 1)
+		])
+	})
+
+	it('empty string', () => {
+		const tokens = scanTokens('')
+		expect(tokens).toEqual([new Token('EOF', '', undefined, 1)])
+	})
+
+	it('numbers', () => {
+		const tokens = scanTokens('2')
+		expect(tokens).toEqual([
+			new Token('NUMBER', '2', 2, 1),
+			new Token('EOF', '', undefined, 1)
+		])
+	})
+
+	it('true literal', () => {
+		const tokens = scanTokens('true')
+		expect(tokens).toEqual([
+			new Token('TRUE', 'true', true, 1),
 			new Token('EOF', '', undefined, 1)
 		])
 	})

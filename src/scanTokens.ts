@@ -115,7 +115,14 @@ export function scanTokens(source: string): Token[] {
 		while (isAlphaNumeric(peek())) advance()
 		const text = source.substring(start, current)
 		const type = keywords[text] || 'IDENTIFIER'
-		addToken(type)
+		switch (type) {
+			case 'TRUE':
+				return addToken(type, true)
+			case 'FALSE':
+				return addToken(type, false)
+			default:
+				return addToken(type)
+		}
 	}
 
 	function peek() {
