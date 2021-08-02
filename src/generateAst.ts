@@ -23,6 +23,7 @@ async function defineAst(
 	const types = typeLines.map((line) => {
 		const [rawClassname, rawFieldList] = line.split(':')
 		const name = rawClassname.trim()
+		const tag = name.toLowerCase()
 		const fields: [type: string, name: string][] = rawFieldList
 			.trim()
 			.split(', ')
@@ -30,20 +31,19 @@ async function defineAst(
 				const [type, name] = rawField.split(' ')
 				return [type, name]
 			})
-		return { name, fields }
+		return { name, tag, fields }
 	})
 	const path = join(process.cwd(), outputDir + '/' + baseName + '.ts')
 	const file = await fs.open(path, 'w')
 	try {
 		await file.write(`import { Token } from '../Token'\n`)
 		await file.write('\n')
-		for (const { name, fields } of types) {
-			await defineType(file, name, fields)
+		for (const type of types) {
+			await defineType(file, baseName, type)
 		}
-		const typeNames = types.map((type) => type.name)
-		await defineUnion(file, baseName, typeNames)
-		await defineVisitor(file, baseName, typeNames)
-		await defineVisitFunction(file, baseName, typeNames)
+		await defineUnion(file, baseName, types)
+		await defineVisitor(file, baseName, types)
+		await defineVisitFunction(file, baseName, types)
 		console.log(`generated ${path}`)
 	} finally {
 		await file.close()
@@ -52,14 +52,31 @@ async function defineAst(
 
 async function defineType(
 	file: fs.FileHandle,
-	typeName: string,
-	fields: [type: string, name: string][]
+	baseName: string,
+	{
+		name,
+		tag,
+		fields
+	}: { name: string; tag: string; fields: [type: string, name: string][] }
 ) {
-	await file.write(`export interface ${typeName} {\n`)
-	await file.write(`    type: '${typeName.toLowerCase()}'\n`)
+	await file.write(`export interface ${name}${baseName} {\n`)
+	await file.write(`    type: '${tag}'\n`)
 	for (const [type, name] of fields) {
 		await file.write(`    ${name}: ${type}\n`)
 	}
+	await file.write(`}\n`)
+	await file.write('\n')
+	await file.write(`export function ${name.toLowerCase()}${baseName}(\n`)
+	for (const [type, name] of fields) {
+		await file.write(`    ${name}: ${type},\n`)
+	}
+	await file.write(`): ${name}${baseName} {\n`)
+	await file.write(`    return {\n`)
+	await file.write(`        type: '${tag}',\n`)
+	for (const [_, name] of fields) {
+		await file.write(`        ${name},\n`)
+	}
+	await file.write(`    }\n`)
 	await file.write(`}\n`)
 	await file.write('\n')
 }
@@ -67,11 +84,11 @@ async function defineType(
 async function defineUnion(
 	file: fs.FileHandle,
 	baseName: string,
-	typeNames: string[]
+	types: { name: string }[]
 ) {
 	await file.write(`export type ${baseName} =\n`)
-	for (const type of typeNames) {
-		await file.write(`    | ${type}\n`)
+	for (const { name } of types) {
+		await file.write(`    | ${name}${baseName}\n`)
 	}
 	await file.write('\n')
 }
@@ -79,11 +96,11 @@ async function defineUnion(
 async function defineVisitor(
 	file: fs.FileHandle,
 	baseName: string,
-	typeNames: string[]
+	types: { name: string }[]
 ) {
 	await file.write(`export interface ${baseName}Visitor<T> {\n`)
-	for (const type of typeNames) {
-		await file.write(`    visit${type}(node: ${type}): T\n`)
+	for (const { name } of types) {
+		await file.write(`    visit${name}(node: ${name}${baseName}): T\n`)
 	}
 	await file.write('}\n')
 	await file.write('\n')
@@ -92,15 +109,18 @@ async function defineVisitor(
 async function defineVisitFunction(
 	file: fs.FileHandle,
 	baseName: string,
-	typeNames: string[]
+	types: { name: string; tag: string }[]
 ) {
-	await file.write(`export function visit${baseName}<T>(
-		visitor: ${baseName}Visitor<T>,
+	await file.write(`export const visit${baseName} = <T>(
+		visitor: ${baseName}Visitor<T>
+	) => (
 		node: ${baseName}
-	): T {\n`)
+	): T => {\n`)
 	await file.write(`    switch(node.type) {\n`)
-	for (const type of typeNames) {
-		await file.write(`        case '${type.toLowerCase()}': return visitor.visit${type}(node)\n`)
+	for (const { name, tag } of types) {
+		await file.write(
+			`        case '${tag}': return visitor.visit${name}(node)\n`
+		)
 	}
 	await file.write('    }\n')
 	await file.write('}\n')

@@ -1,45 +1,88 @@
 import { Token } from '../Token'
 
-export interface Binary {
+export interface BinaryExpr {
     type: 'binary'
     left: Expr
     operator: Token
     right: Expr
 }
 
-export interface Grouping {
+export function binaryExpr(
+    left: Expr,
+    operator: Token,
+    right: Expr,
+): BinaryExpr {
+    return {
+        type: 'binary',
+        left,
+        operator,
+        right,
+    }
+}
+
+export interface GroupingExpr {
     type: 'grouping'
     expression: Expr
 }
 
-export interface Literal {
+export function groupingExpr(
+    expression: Expr,
+): GroupingExpr {
+    return {
+        type: 'grouping',
+        expression,
+    }
+}
+
+export interface LiteralExpr {
     type: 'literal'
     value: Object
 }
 
-export interface Unary {
+export function literalExpr(
+    value: Object,
+): LiteralExpr {
+    return {
+        type: 'literal',
+        value,
+    }
+}
+
+export interface UnaryExpr {
     type: 'unary'
     operator: Token
     right: Expr
 }
 
-export type Expr =
-    | Binary
-    | Grouping
-    | Literal
-    | Unary
-
-export interface ExprVisitor<T> {
-    visitBinary(node: Binary): T
-    visitGrouping(node: Grouping): T
-    visitLiteral(node: Literal): T
-    visitUnary(node: Unary): T
+export function unaryExpr(
+    operator: Token,
+    right: Expr,
+): UnaryExpr {
+    return {
+        type: 'unary',
+        operator,
+        right,
+    }
 }
 
-export function visitExpr<T>(
-		visitor: ExprVisitor<T>,
+export type Expr =
+    | BinaryExpr
+    | GroupingExpr
+    | LiteralExpr
+    | UnaryExpr
+
+export interface ExprVisitor<T> {
+    visitBinary(node: BinaryExpr): T
+    visitGrouping(node: GroupingExpr): T
+    visitLiteral(node: LiteralExpr): T
+    visitUnary(node: UnaryExpr): T
+}
+
+export const visitExpr = <T>(
+		visitor: ExprVisitor<T>
+	) => (
 		node: Expr
-	): T {
+	): T => {
     switch(node.type) {
         case 'binary': return visitor.visitBinary(node)
         case 'grouping': return visitor.visitGrouping(node)
