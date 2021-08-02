@@ -40,10 +40,11 @@ async function defineAst(
 		for (const { name, fields } of types) {
 			await defineType(file, name, fields)
 		}
-		await file.write(`export type ${baseName} =\n`)
-		for (const typeName of types.map((t) => t.name)) {
-			await file.write(`    | ${typeName}\n`)
-		}
+		const typeNames = types.map((type) => type.name)
+		await defineUnion(file, baseName, typeNames)
+		await defineVisitor(file, baseName, typeNames)
+		await defineVisitFunction(file, baseName, typeNames)
+		console.log(`generated ${path}`)
 	} finally {
 		await file.close()
 	}
@@ -60,5 +61,48 @@ async function defineType(
 		await file.write(`    ${name}: ${type}\n`)
 	}
 	await file.write(`}\n`)
+	await file.write('\n')
+}
+
+async function defineUnion(
+	file: fs.FileHandle,
+	baseName: string,
+	typeNames: string[]
+) {
+	await file.write(`export type ${baseName} =\n`)
+	for (const type of typeNames) {
+		await file.write(`    | ${type}\n`)
+	}
+	await file.write('\n')
+}
+
+async function defineVisitor(
+	file: fs.FileHandle,
+	baseName: string,
+	typeNames: string[]
+) {
+	await file.write(`export interface ${baseName}Visitor<T> {\n`)
+	for (const type of typeNames) {
+		await file.write(`    visit${type}(node: ${type}): T\n`)
+	}
+	await file.write('}\n')
+	await file.write('\n')
+}
+
+async function defineVisitFunction(
+	file: fs.FileHandle,
+	baseName: string,
+	typeNames: string[]
+) {
+	await file.write(`export function visit${baseName}<T>(
+		visitor: ${baseName}Visitor<T>,
+		node: ${baseName}
+	): T {\n`)
+	await file.write(`    switch(node.type) {\n`)
+	for (const type of typeNames) {
+		await file.write(`        case '${type.toLowerCase()}': return visitor.visit${type}(node)\n`)
+	}
+	await file.write('    }\n')
+	await file.write('}\n')
 	await file.write('\n')
 }

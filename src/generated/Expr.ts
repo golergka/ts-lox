@@ -28,3 +28,23 @@ export type Expr =
     | Grouping
     | Literal
     | Unary
+
+export interface ExprVisitor<T> {
+    visitBinary(node: Binary): T
+    visitGrouping(node: Grouping): T
+    visitLiteral(node: Literal): T
+    visitUnary(node: Unary): T
+}
+
+export function visitExpr<T>(
+		visitor: ExprVisitor<T>,
+		node: Expr
+	): T {
+    switch(node.type) {
+        case 'binary': return visitor.visitBinary(node)
+        case 'grouping': return visitor.visitGrouping(node)
+        case 'literal': return visitor.visitLiteral(node)
+        case 'unary': return visitor.visitUnary(node)
+    }
+}
+
