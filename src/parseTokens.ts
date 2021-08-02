@@ -69,7 +69,7 @@ export function parseTokens(tokens: Token[]) {
 			consume('RIGHT_PAREN', "Expect ')' after expression.")
 			return groupingExpr(expr)
 		}
-		throw new Error(`unexpected token: ${peek().toString()}`)
+		throw error(peek(), 'Expect expression.')
 	}
 
 	function unary(): Expr {
@@ -116,26 +116,36 @@ export function parseTokens(tokens: Token[]) {
 	function expression() {
 		return equality()
 	}
-    
-    function synchronize() {
-        advance()
 
-        while (!isAtEnd()) {
-            if (previous().type === 'SEMICOLON') return
-                
-            switch (peek().type) {
-                case 'CLASS':
-                case 'FUN':
-                case 'VAR':
-                case 'FOR':
-                case 'IF':
-                case 'WHILE':
-                case 'PRINT':
-                case 'RETURN':
-                    return
-            }
-            
-            advance()
+	function synchronize() {
+		advance()
+
+		while (!isAtEnd()) {
+			if (previous().type === 'SEMICOLON') return
+
+			switch (peek().type) {
+				case 'CLASS':
+				case 'FUN':
+				case 'VAR':
+				case 'FOR':
+				case 'IF':
+				case 'WHILE':
+				case 'PRINT':
+				case 'RETURN':
+					return
+			}
+
+			advance()
+		}
+	}
+    
+    try {
+        return expression()
+    } catch (e) {
+        if (e instanceof ParseError) {
+            return null
+        } else {
+            throw e
         }
     }
 }

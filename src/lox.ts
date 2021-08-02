@@ -1,5 +1,7 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
+import { parseTokens } from './parseTokens'
+import { printExpr } from './printExpr'
 import { scanTokens } from './scanTokens'
 import { Token } from './Token'
 
@@ -33,10 +35,11 @@ export async function runPrompt() {
 
 function run(source: string, filename?: string) {
 	const tokens = scanTokens(source)
+	const expression = parseTokens(tokens)
 	
-	for (const token of tokens) {
-		console.log(token)
-	}
+	if (!expression || hadError) return
+	
+	console.log(printExpr(expression))
 }
 
 export function report(line: number, message: string): void
