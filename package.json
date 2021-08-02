@@ -1,7 +1,7 @@
 {
-  "name": "project-template",
+  "name": "ts-lox",
   "version": "1.0.0",
-  "description": "",
+  "description": "Typescript version of LOX language from Crafting Interpreters",
   "main": ".build/index.js",
   "types": ".build/index.d.ts",
   "engines": {
@@ -24,7 +24,7 @@
     },
     "maxConcurrency": 50
   },
-  "author": "",
+  "author": "Max <golergka> Yankov",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^26.0.15",
