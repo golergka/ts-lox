@@ -71,23 +71,3 @@ export type Expr =
     | LiteralExpr
     | UnaryExpr
 
-export interface ExprVisitor<T> {
-    visitBinary(node: BinaryExpr): T
-    visitGrouping(node: GroupingExpr): T
-    visitLiteral(node: LiteralExpr): T
-    visitUnary(node: UnaryExpr): T
-}
-
-export const visitExpr = <T>(
-		visitor: ExprVisitor<T>
-	) => (
-		node: Expr
-	): T => {
-    switch(node.type) {
-        case 'binary': return visitor.visitBinary(node)
-        case 'grouping': return visitor.visitGrouping(node)
-        case 'literal': return visitor.visitLiteral(node)
-        case 'unary': return visitor.visitUnary(node)
-    }
-}
-

@@ -42,8 +42,6 @@ async function defineAst(
 			await defineType(file, baseName, type)
 		}
 		await defineUnion(file, baseName, types)
-		await defineVisitor(file, baseName, types)
-		await defineVisitFunction(file, baseName, types)
 		console.log(`generated ${path}`)
 	} finally {
 		await file.close()
@@ -90,39 +88,5 @@ async function defineUnion(
 	for (const { name } of types) {
 		await file.write(`    | ${name}${baseName}\n`)
 	}
-	await file.write('\n')
-}
-
-async function defineVisitor(
-	file: fs.FileHandle,
-	baseName: string,
-	types: { name: string }[]
-) {
-	await file.write(`export interface ${baseName}Visitor<T> {\n`)
-	for (const { name } of types) {
-		await file.write(`    visit${name}(node: ${name}${baseName}): T\n`)
-	}
-	await file.write('}\n')
-	await file.write('\n')
-}
-
-async function defineVisitFunction(
-	file: fs.FileHandle,
-	baseName: string,
-	types: { name: string; tag: string }[]
-) {
-	await file.write(`export const visit${baseName} = <T>(
-		visitor: ${baseName}Visitor<T>
-	) => (
-		node: ${baseName}
-	): T => {\n`)
-	await file.write(`    switch(node.type) {\n`)
-	for (const { name, tag } of types) {
-		await file.write(
-			`        case '${tag}': return visitor.visit${name}(node)\n`
-		)
-	}
-	await file.write('    }\n')
-	await file.write('}\n')
 	await file.write('\n')
 }

@@ -1,24 +1,17 @@
-import {
-	BinaryExpr,
-	Expr,
-	ExprVisitor,
-	GroupingExpr,
-	LiteralExpr,
-	UnaryExpr,
-	visitExpr
-} from './generated/Expr'
+import { Expr } from './generated/Expr'
 
-const astPrinter: ExprVisitor<string> = {
-	visitBinary: (node: BinaryExpr) =>
-		parenthesize(node.operator.lexeme, node.left, node.right),
-	visitGrouping: (node: GroupingExpr) => parenthesize('group', node.expression),
-	visitLiteral: (node: LiteralExpr) =>
-		node.value === null ? 'nil' : node.value.toString(),
-	visitUnary: (node: UnaryExpr) =>
-		parenthesize(node.operator.lexeme, node.right)
+export function printExpr(expr: Expr) {
+	switch (expr.type) {
+		case 'binary':
+			return parenthesize(expr.operator.lexeme, expr.left, expr.right)
+		case 'grouping':
+			return parenthesize('group', expr.expression)
+		case 'literal':
+			return expr.value === null ? 'nil' : expr.value.toString()
+		case 'unary':
+			return parenthesize(expr.operator.lexeme, expr.right)
+	}
 }
-
-export const printExpr = visitExpr(astPrinter)
 
 function parenthesize(name: string, ...expressions: Expr[]): string {
 	return `(${name}${expressions.map((e) => ` ${printExpr(e)}`).join()})`
