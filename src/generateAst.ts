@@ -9,10 +9,11 @@ if (restArgs.length > 0 || !outputDir) {
 }
 
 defineAst(outputDir, 'Expr', [
-	'Binary   : Expr left, Token operator, Expr right',
-	'Grouping : Expr expression',
-	'Literal  : Object|null value',
-	'Unary    : Token operator, Expr right'
+	'Conditional : Expr condition, Expr consequent, Expr alternative',
+	'Binary      : Expr left, Token operator, Expr right',
+	'Grouping    : Expr expression',
+	'Literal     : Object|null value',
+	'Unary       : Token operator, Expr right'
 ])
 
 async function defineAst(

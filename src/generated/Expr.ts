@@ -1,5 +1,25 @@
 import { Token } from '../Token'
 
+export interface ConditionalExpr {
+    type: 'conditional'
+    condition: Expr
+    consequent: Expr
+    alternative: Expr
+}
+
+export function conditionalExpr(
+    condition: Expr,
+    consequent: Expr,
+    alternative: Expr,
+): ConditionalExpr {
+    return {
+        type: 'conditional',
+        condition,
+        consequent,
+        alternative,
+    }
+}
+
 export interface BinaryExpr {
     type: 'binary'
     left: Expr
@@ -66,6 +86,7 @@ export function unaryExpr(
 }
 
 export type Expr =
+    | ConditionalExpr
     | BinaryExpr
     | GroupingExpr
     | LiteralExpr

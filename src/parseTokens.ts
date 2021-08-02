@@ -1,5 +1,6 @@
 import {
 	binaryExpr,
+	conditionalExpr,
 	Expr,
 	groupingExpr,
 	literalExpr,
@@ -111,9 +112,22 @@ export function parseTokens(tokens: Token[]) {
 	)
 
 	const equality = makeBinary(comparison, 'BANG_EQUAL', 'EQUAL_EQUAL')
+	
+	function conditional() {
+		let expr = equality()
+		
+		while (match('QUESTION')) {
+			const consequent = conditional()
+			consume('COLON', "Expect ':' after conditional")
+			const alternative = conditional()
+			expr = conditionalExpr(expr, consequent, alternative)
+		}
+		
+		return expr
+	}
 
 	function expression() {
-		return equality()
+		return conditional()
 	}
 	
 	const expressionSeries = makeBinary(expression, 'COMMA')

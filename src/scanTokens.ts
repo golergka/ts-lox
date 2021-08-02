@@ -42,6 +42,10 @@ export function scanTokens(source: string): Token[] {
 				return addToken('SEMICOLON')
 			case '*':
 				return addToken('STAR')
+			case '?':
+				return addToken('QUESTION')
+			case ':':
+				return addToken('COLON')
 			case '!':
 				return addToken(match('=') ? 'BANG_EQUAL' : 'BANG')
 			case '=':
@@ -82,7 +86,7 @@ export function scanTokens(source: string): Token[] {
 	}
 
 	function string() {
-		while (peek() != '"' && isAtEnd()) {
+		while (peek() != '"' && !isAtEnd()) {
 			if (peek() == '\n') line++
 			advance()
 		}
@@ -121,7 +125,7 @@ export function scanTokens(source: string): Token[] {
 			case 'FALSE':
 				return addToken(type, false)
 			default:
-				return addToken(type)
+				return addToken(type, text)
 		}
 	}
 

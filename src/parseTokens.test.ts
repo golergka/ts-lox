@@ -1,10 +1,21 @@
-import { binaryExpr, literalExpr, unaryExpr } from './generated/Expr'
-import { report } from './lox'
+import { binaryExpr, conditionalExpr, literalExpr, unaryExpr } from './generated/Expr'
 import { parseTokens } from './parseTokens'
 import { scanTokens } from './scanTokens'
 import { Token } from './Token'
 
 describe(`parseTokens`, () => {
+	it('1', () => {
+		const tokens = scanTokens(`1`)
+		const result = parseTokens(tokens)
+		expect(result).toEqual(literalExpr(1))	
+	})
+
+	it('"a"', () => {
+		const tokens = scanTokens('"a"')
+		const result = parseTokens(tokens)
+		expect(result).toEqual(literalExpr('a'))
+	})
+
 	it('2+2', () => {
 		const tokens = scanTokens('2+2')
 		const result = parseTokens(tokens)
@@ -94,6 +105,18 @@ describe(`parseTokens`, () => {
 				),
 				new Token('COMMA', ',', undefined, 1),
 				literalExpr(3)
+			)
+		)
+	})
+	
+	it('true?1:2', () => {
+		const tokens = scanTokens('true?1:2')
+		const result = parseTokens(tokens)
+		expect(result).toEqual(
+			conditionalExpr(
+				literalExpr(true),
+				literalExpr(1),
+				literalExpr(2),
 			)
 		)
 	})
