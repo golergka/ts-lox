@@ -8,19 +8,30 @@ if (restArgs.length > 0 || !outputDir) {
 	process.exit(1)
 }
 
-defineAst(outputDir, 'Expr', [
-	'Conditional : Expr condition, Expr consequent, Expr alternative',
-	'Binary      : Expr left, Token operator, Expr right',
-	'BinaryError : Token operator, Expr right',
-	'Grouping    : Expr expression',
-	'Literal     : Object|null value',
-	'Unary       : Token operator, Expr right'
-])
+defineAst(
+	outputDir,
+	'Expr',
+	[
+		'Conditional : Expr condition, Expr consequent, Expr alternative',
+		'Binary      : Expr left, Token operator, Expr right',
+		'BinaryError : Token operator, Expr right',
+		'Grouping    : Expr expression',
+		'Literal     : Object|null value',
+		'Unary       : Token operator, Expr right'
+	],
+	[[['Token'], '../Token']]
+)
+
+defineAst(outputDir, 'Stmt', [
+	'Expression : Expr expression',
+	'Print      : Expr expression'
+], [[['Expr'], './Expr']])
 
 async function defineAst(
 	outputDir: string,
 	baseName: string,
-	typeLines: string[]
+	typeLines: string[],
+	imports: [types: string[], from: string][] = []
 ) {
 	const types = typeLines.map((line) => {
 		const [rawClassname, rawFieldList] = line.split(':')
@@ -38,7 +49,9 @@ async function defineAst(
 	const path = join(process.cwd(), outputDir + '/' + baseName + '.ts')
 	const file = await fs.open(path, 'w')
 	try {
-		await file.write(`import { Token } from '../Token'\n`)
+		for (const [types, from] of imports) {
+			await file.write(`import { ${types.join(', ')} } from '${from}'\n`)
+		}
 		await file.write('\n')
 		for (const type of types) {
 			await defineType(file, baseName, type)
