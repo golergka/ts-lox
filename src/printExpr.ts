@@ -1,6 +1,6 @@
 import { Expr } from './generated/Expr'
 
-export function printExpr(expr: Expr) {
+export function printExpr(expr: Expr): string {
 	switch (expr.type) {
 		case 'binary':
 			return parenthesize(expr.operator.lexeme, expr.left, expr.right)
