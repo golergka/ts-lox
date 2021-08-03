@@ -11,6 +11,7 @@ if (restArgs.length > 0 || !outputDir) {
 defineAst(outputDir, 'Expr', [
 	'Conditional : Expr condition, Expr consequent, Expr alternative',
 	'Binary      : Expr left, Token operator, Expr right',
+	'BinaryError : Token operator, Expr right',
 	'Grouping    : Expr expression',
 	'Literal     : Object|null value',
 	'Unary       : Token operator, Expr right'
@@ -24,7 +25,7 @@ async function defineAst(
 	const types = typeLines.map((line) => {
 		const [rawClassname, rawFieldList] = line.split(':')
 		const name = rawClassname.trim()
-		const tag = name.toLowerCase()
+		const tag = name.slice(0, 1).toLowerCase() + name.slice(1)
 		const fields: [type: string, name: string][] = rawFieldList
 			.trim()
 			.split(', ')
@@ -65,7 +66,7 @@ async function defineType(
 	}
 	await file.write(`}\n`)
 	await file.write('\n')
-	await file.write(`export function ${name.toLowerCase()}${baseName}(\n`)
+	await file.write(`export function ${tag}${baseName}(\n`)
 	for (const [type, name] of fields) {
 		await file.write(`    ${name}: ${type},\n`)
 	}

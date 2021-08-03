@@ -1,4 +1,4 @@
-import { binaryExpr, conditionalExpr, literalExpr, unaryExpr } from './generated/Expr'
+import { binaryErrorExpr, binaryExpr, conditionalExpr, literalExpr, unaryExpr } from './generated/Expr'
 import { parseTokens } from './parseTokens'
 import { scanTokens } from './scanTokens'
 import { Token } from './Token'
@@ -49,6 +49,17 @@ describe(`parseTokens`, () => {
 					literalExpr(2)
 				),
 				new Token('PLUS', '+', undefined, 1),
+				literalExpr(3)
+			)
+		)
+	})
+	
+	it('*3', () => {
+		const tokens = scanTokens('*3')
+		const result = parseTokens(tokens)
+		expect(result).toEqual(
+			binaryErrorExpr(
+				new Token('STAR', '*', undefined, 1),
 				literalExpr(3)
 			)
 		)

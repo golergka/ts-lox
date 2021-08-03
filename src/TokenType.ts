@@ -19,7 +19,7 @@ export type TokenType =
 	| 'EQUAL'
 	| 'EQUAL_EQUAL'
 	| 'GREATER'
-	| 'GREATR_EQUAL'
+	| 'GREATER_EQUAL'
 	| 'LESS'
 	| 'LESS_EQUAL'
 	// Literals.

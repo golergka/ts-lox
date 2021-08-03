@@ -53,7 +53,7 @@ export function scanTokens(source: string): Token[] {
 			case '<':
 				return addToken(match('=') ? 'LESS_EQUAL' : 'LESS')
 			case '>':
-				return addToken(match('=') ? 'GREATR_EQUAL' : 'GREATER')
+				return addToken(match('=') ? 'GREATER_EQUAL' : 'GREATER')
 			case '/':
 				if (match('/')) {
 					// A comment goes until the end of the line

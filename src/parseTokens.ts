@@ -1,4 +1,5 @@
 import {
+	binaryErrorExpr,
 	binaryExpr,
 	conditionalExpr,
 	Expr,
@@ -12,7 +13,7 @@ import { TokenType } from './TokenType'
 
 export function parseTokens(tokens: Token[]) {
 	let current = 0
-
+	
 	function peek() {
 		return tokens[current]
 	}
@@ -106,31 +107,54 @@ export function parseTokens(tokens: Token[]) {
 	const comparison = makeBinary(
 		term,
 		'GREATER',
-		'GREATR_EQUAL',
+		'GREATER_EQUAL',
 		'LESS',
 		'LESS_EQUAL'
 	)
 
 	const equality = makeBinary(comparison, 'BANG_EQUAL', 'EQUAL_EQUAL')
-	
+
 	function conditional() {
 		let expr = equality()
-		
+
 		while (match('QUESTION')) {
 			const consequent = conditional()
 			consume('COLON', "Expect ':' after conditional")
 			const alternative = conditional()
 			expr = conditionalExpr(expr, consequent, alternative)
 		}
-		
+
 		return expr
 	}
 
 	function expression() {
 		return conditional()
 	}
-	
-	const expressionSeries = makeBinary(expression, 'COMMA')
+
+	function binaryError() {
+		if (
+			match(
+				'SLASH',
+				'STAR',
+				'PLUS',
+				'GREATER',
+				'GREATER_EQUAL',
+				'LESS',
+				'LESS_EQUAL',
+				'BANG_EQUAL',
+				'EQUAL_EQUAL'
+			)
+		) {
+			const operator = previous()
+			const right = expression()
+			error(operator, "Binary operator without left operand")
+			return binaryErrorExpr(operator, right)
+		}
+		
+		return expression()
+	}
+
+	const expressionSeries = makeBinary(binaryError, 'COMMA')
 
 	function synchronize() {
 		advance()
@@ -153,14 +177,14 @@ export function parseTokens(tokens: Token[]) {
 			advance()
 		}
 	}
-    
-    try {
-        return expressionSeries()
-    } catch (e) {
-        if (e instanceof ParseError) {
-            return null
-        } else {
-            throw e
-        }
-    }
+
+	try {
+		return expressionSeries()
+	} catch (e) {
+		if (e instanceof ParseError) {
+			return null
+		} else {
+			throw e
+		}
+	}
 }

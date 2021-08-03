@@ -40,6 +40,23 @@ export function binaryExpr(
     }
 }
 
+export interface BinaryErrorExpr {
+    type: 'binaryError'
+    operator: Token
+    right: Expr
+}
+
+export function binaryErrorExpr(
+    operator: Token,
+    right: Expr,
+): BinaryErrorExpr {
+    return {
+        type: 'binaryError',
+        operator,
+        right,
+    }
+}
+
 export interface GroupingExpr {
     type: 'grouping'
     expression: Expr
@@ -88,6 +105,7 @@ export function unaryExpr(
 export type Expr =
     | ConditionalExpr
     | BinaryExpr
+    | BinaryErrorExpr
     | GroupingExpr
     | LiteralExpr
     | UnaryExpr
