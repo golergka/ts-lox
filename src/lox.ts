@@ -1,16 +1,19 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
+import { interpretExpr, RuntimeError } from './interpretExpr'
 import { parseTokens } from './parseTokens'
 import { printExpr } from './printExpr'
 import { scanTokens } from './scanTokens'
 import { Token } from './Token'
 
 let hadError = false
+let hadRuntimeError = false
 
 export function runFile(filename: string) {
 	const code = fs.readFileSync(filename, "utf8")
 	run(code, filename)
-	if (hadError) process.exit(1)
+	if (hadError) process.exit(65)
+	if (hadRuntimeError) process.exit(70)
 }
 
 export async function runPrompt() {
@@ -30,6 +33,7 @@ export async function runPrompt() {
 		if (line === null) break;
 		run(line)
 		hadError = false
+		hadRuntimeError = false
 	}
 }
 
@@ -39,7 +43,7 @@ function run(source: string, filename?: string) {
 	
 	if (!expression || hadError) return
 	
-	console.log(printExpr(expression))
+	interpretExpr(expression)
 }
 
 export function report(line: number, message: string): void
@@ -57,4 +61,9 @@ export function loxError(token: Token, message: string) {
 	} else {
 		report(token.line, ` at '${token.lexeme}'`, message)
 	}
+}
+
+export function runtimeError(error: RuntimeError) {
+	console.log(error.message + `\n[line ${error.token.line}]`)
+	hadRuntimeError = true
 }
