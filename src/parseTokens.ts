@@ -11,6 +11,7 @@ import {
 } from './generated/Expr'
 import {
 	blockStmt,
+	ExpressionStmt,
 	expressionStmt,
 	ifStmt,
 	printStmt,
@@ -198,6 +199,32 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	const expressionSeries = makeBinary(binaryError, 'COMMA')
 
+	function forStatement(): Stmt {
+		consume('LEFT_PAREN', "Expect '(' after 'for'.")
+		const initializer = match('SEMICOLON')
+			? null
+			: match('VAR')
+			? variableDeclaration()
+			: expressionStatement(false)
+		const condition = check('SEMICOLON')
+			? literalExpr(true)
+			: expression()
+		consume('SEMICOLON', "Expect ';' after loop condition.")
+		const increment = check('RIGHT_PAREN')
+			? null
+			: expression()
+		consume('RIGHT_PAREN', "Expect ')' after loop increment.")
+		let body = statement(false)
+		if (increment) {
+			body = blockStmt([body, expressionStmt(increment)])
+		}
+		body = whileStmt(condition, body)
+		if (initializer) {
+			body = blockStmt([initializer, body])
+		}
+		return body
+	}
+
 	function ifStatement() {
 		consume('LEFT_PAREN', "Expect '(' after 'if'.")
 		const condition = expression()
@@ -238,7 +265,10 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		return statements
 	}
 
-	function expressionStatement(allowExpressions: boolean) {
+	function expressionStatement(allowExpressions: false): Stmt
+	function expressionStatement(allowExpressions: true): Stmt|Expr
+	function expressionStatement(allowExpressions: boolean): Stmt|Expr
+	function expressionStatement(allowExpressions: boolean): Stmt|Expr {
 		const expr = expressionSeries()
 		if (match('SEMICOLON')) {
 			return expressionStmt(expr)
@@ -253,6 +283,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 	function statement(allowExpressions: true): Stmt|Expr
 	function statement(allowExpressions: boolean): Stmt|Expr
 	function statement(allowExpressions: boolean): Stmt|Expr {
+		if (match('FOR')) return forStatement()
 		if (match('IF')) return ifStatement()
 		if (match('PRINT')) return printStatement()
 		if (match('WHILE')) return whileStatement()

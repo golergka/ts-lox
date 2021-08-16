@@ -1,11 +1,19 @@
 import {
+	assignmentExpr,
 	binaryErrorExpr,
 	binaryExpr,
 	conditionalExpr,
 	literalExpr,
-	unaryExpr
+	unaryExpr,
+	variableExpr
 } from './generated/Expr'
-import { expressionStmt, printStmt, varStmt, whileStmt } from './generated/Stmt'
+import {
+	blockStmt,
+	expressionStmt,
+	printStmt,
+	varStmt,
+	whileStmt
+} from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './Token'
 import { mock, instance, verify, anything } from 'ts-mockito'
@@ -249,7 +257,7 @@ describe(`parseTokens`, () => {
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), undefined)
 			])
 		})
-		
+
 		it('while (true) print "hello world"', () => {
 			const tokens: Token[] = [
 				new Token('WHILE', 'while', undefined, 1),
@@ -263,14 +271,61 @@ describe(`parseTokens`, () => {
 			]
 			const result = parseTokens(ctx, tokens, false)
 			expect(result).toEqual([
-				whileStmt(
-					literalExpr(true),
-					printStmt(
-						literalExpr('hello world'))
-				)
+				whileStmt(literalExpr(true), printStmt(literalExpr('hello world')))
 			])
 		})
 
+		it('for (var i = 0; i < 10; i = i + 1) print "hello world"', () => {
+			const tokens: Token[] = [
+				new Token('FOR', 'for', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('VAR', 'var', undefined, 1),
+				new Token('IDENTIFIER', 'i', undefined, 1),
+				new Token('EQUAL', '=', undefined, 1),
+				new Token('NUMBER', '0', 0, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('IDENTIFIER', 'i', undefined, 1),
+				new Token('LESS', '<', undefined, 1),
+				new Token('NUMBER', '10', 10, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('IDENTIFIER', 'i', undefined, 1),
+				new Token('EQUAL', '=', undefined, 1),
+				new Token('IDENTIFIER', 'i', undefined, 1),
+				new Token('PLUS', '+', undefined, 1),
+				new Token('NUMBER', '1', 1, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('PRINT', 'print', undefined, 1),
+				new Token('STRING', '"hello world"', 'hello world', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				blockStmt([
+					varStmt(new Token('IDENTIFIER', 'i', undefined, 1), literalExpr(0)),
+					whileStmt(
+						binaryExpr(
+							variableExpr(new Token('IDENTIFIER', 'i', undefined, 1)),
+							new Token('LESS', '<', undefined, 1),
+							literalExpr(10)
+						),
+						blockStmt([
+							printStmt(literalExpr('hello world')),
+							expressionStmt(
+								assignmentExpr(
+									new Token('IDENTIFIER', 'i', undefined, 1),
+									binaryExpr(
+										variableExpr(new Token('IDENTIFIER', 'i', undefined, 1)),
+										new Token('PLUS', '+', undefined, 1),
+										literalExpr(1)
+									)
+								)
+							)
+						])
+					)
+				])
+			])
+		})
 	})
 
 	describe('allowExpressions: true', () => {
