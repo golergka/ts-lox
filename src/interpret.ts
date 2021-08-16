@@ -58,6 +58,15 @@ export function evaluate(env: Environment, expr: Expr): Object | null {
 
 		case 'binary': {
 			const left = evaluate(env, expr.left)
+
+			// Logical operators short-circuit
+			switch (expr.operator.type) {
+				case 'OR':
+					return isTruthy(left) ? left : evaluate(env, expr.right)
+				case 'AND':
+					return isTruthy(left) ? evaluate(env, expr.right) : left
+			}
+
 			const right = evaluate(env, expr.right)
 
 			switch (expr.operator.type) {
@@ -147,9 +156,10 @@ function executeBlock(env: Environment, stmts: Stmt[]): void {
 
 function execute(env: Environment, stmt: Stmt): Object|null {
 	switch (stmt.type) {
-		case 'expression':
+		case 'expression': {
 			evaluate(env, stmt.expression)
 			return null
+		}
 		case 'print': {
 			const value = evaluate(env, stmt.expression)
 			console.log(stringify(value))
@@ -164,6 +174,14 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 		}
 		case 'block': {
 			executeBlock(new Environment(env), stmt.statements)
+			return null
+		}
+		case 'if': {
+			if (isTruthy(evaluate(env, stmt.condition))) {
+				execute(env, stmt.consequent)
+			} else if (stmt.alternative) {
+				execute(env, stmt.alternative)
+			}
 			return null
 		}
 	}

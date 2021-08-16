@@ -29,6 +29,26 @@ export function expressionStmt(
     }
 }
 
+export interface IfStmt {
+    type: 'if'
+    condition: Expr
+    consequent: Stmt
+    alternative: Stmt|null
+}
+
+export function ifStmt(
+    condition: Expr,
+    consequent: Stmt,
+    alternative: Stmt|null,
+): IfStmt {
+    return {
+        type: 'if',
+        condition,
+        consequent,
+        alternative,
+    }
+}
+
 export interface PrintStmt {
     type: 'print'
     expression: Expr
@@ -63,6 +83,7 @@ export function varStmt(
 export type Stmt =
     | BlockStmt
     | ExpressionStmt
+    | IfStmt
     | PrintStmt
     | VarStmt
 

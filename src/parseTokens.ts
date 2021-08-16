@@ -12,6 +12,7 @@ import {
 import {
 	blockStmt,
 	expressionStmt,
+	ifStmt,
 	printStmt,
 	Stmt,
 	varStmt
@@ -132,8 +133,12 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	const equality = makeBinary(comparison, 'BANG_EQUAL', 'EQUAL_EQUAL')
 
+	const and = makeBinary(equality, 'AND')
+
+	const or = makeBinary(and, 'OR')
+
 	function conditional() {
-		let expr = equality()
+		let expr = or()
 
 		while (match('QUESTION')) {
 			const consequent = conditional()
@@ -192,6 +197,17 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	const expressionSeries = makeBinary(binaryError, 'COMMA')
 
+	function ifStatement() {
+		consume('LEFT_PAREN', "Expect '(' after 'if'.")
+		const condition = expression()
+		consume('RIGHT_PAREN', "Expect ')' after condition.")
+		const consequent = statement(false)
+		const alternative = match('ELSE')
+			? statement(false)
+			: null
+		return ifStmt(condition, consequent, alternative)
+	}
+
 	function printStatement() {
 		const value = expressionSeries()
 		consume('SEMICOLON', "Expect ';' after value.")
@@ -228,6 +244,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 	function statement(allowExpressions: true): Stmt|Expr
 	function statement(allowExpressions: boolean): Stmt|Expr
 	function statement(allowExpressions: boolean): Stmt|Expr {
+		if (match('IF')) return ifStatement()
 		if (match('PRINT')) return printStatement()
 		if (match('LEFT_BRACE')) return blockStmt(blockStatement())
 		return expressionStatement(allowExpressions)
@@ -286,6 +303,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 				case 'expression':
 				case 'print':
 				case 'var':
+				case 'if':
 					statements.push(first)
 					break
 				// All possible expressions

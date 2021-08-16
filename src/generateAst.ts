@@ -30,6 +30,7 @@ defineAst(
 	[
 		'Block 		: Stmt[] statements',
 		'Expression : Expr expression',
+		'If         : Expr condition, Stmt consequent, Stmt|null alternative',
 		'Print      : Expr expression',
 		'Var        : Token name, Expr|null|undefined initializer'
 	],

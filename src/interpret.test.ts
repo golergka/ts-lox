@@ -61,6 +61,56 @@ describe('evaluate', () => {
 			const result = evaluate(env, expr)
 			expect(result).toEqual(false)
 		})
+		
+		it('true&&false', () => {
+			const expr = binaryExpr(
+				literalExpr(true),
+				new Token('AND', '&&', null, 1),
+				literalExpr(false)
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual(false)	
+		})
+		
+		it('true&&true', () => {
+			const expr = binaryExpr(
+				literalExpr(true),
+				new Token('AND', '&&', null, 1),
+				literalExpr(true)
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual(true)	
+		})
+
+		it('"abc"&&"cde"', () => {
+			const expr = binaryExpr(
+				literalExpr('abc'),
+				new Token('AND', '&&', null, 1),
+				literalExpr('cde')
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual("cde")	
+		})
+
+		it('"abc"||"cde"', () => {
+			const expr = binaryExpr(
+				literalExpr('abc'),
+				new Token('OR', '||', null, 1),
+				literalExpr('cde')
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual("abc")	
+		})
+		
+		it('false||"cde"', () => {
+			const expr = binaryExpr(
+				literalExpr(false),
+				new Token('OR', '||', null, 1),
+				literalExpr('cde')
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual("cde")	
+		})
 	})
 
 	describe(`conditional operator`, () => {
