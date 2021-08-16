@@ -29,7 +29,7 @@ defineAst(
 	[
 		'Expression : Expr expression',
 		'Print      : Expr expression',
-		'Var        : Token name, Expr initializer'
+		'Var        : Token name, Expr|null initializer'
 	],
 	[
 		[['Expr'], './Expr'],

@@ -32,12 +32,12 @@ export function printStmt(
 export interface VarStmt {
     type: 'var'
     name: Token
-    initializer: Expr
+    initializer: Expr|null
 }
 
 export function varStmt(
     name: Token,
-    initializer: Expr,
+    initializer: Expr|null,
 ): VarStmt {
     return {
         type: 'var',

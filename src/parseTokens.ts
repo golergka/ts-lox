@@ -5,9 +5,10 @@ import {
 	Expr,
 	groupingExpr,
 	literalExpr,
-	unaryExpr
+	unaryExpr,
+	variableExpr
 } from './generated/Expr'
-import { expressionStmt, printStmt, Stmt } from './generated/Stmt'
+import { expressionStmt, printStmt, Stmt, varStmt } from './generated/Stmt'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
@@ -18,7 +19,7 @@ export interface ParserContext {
 
 export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 	let current = 0
-	
+
 	function peek() {
 		return tokens[current]
 	}
@@ -56,7 +57,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 
 	function error(token: Token, message: string) {
 		if (token.type === 'EOF') {
-			ctx.parserError(token.line, " at end", message)
+			ctx.parserError(token.line, ' at end', message)
 		} else {
 			ctx.parserError(token.line, ` at '${token.lexeme}'`, message)
 		}
@@ -74,6 +75,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		if (match('TRUE')) return literalExpr(true)
 		if (match('NIL')) return literalExpr(null)
 		if (match('NUMBER', 'STRING')) return literalExpr(previous().literal)
+		if (match('IDENTIFIER')) return variableExpr(previous())
 		if (match('LEFT_PAREN')) {
 			const expr = expression()
 			consume('RIGHT_PAREN', "Expect ')' after expression.")
@@ -156,31 +158,29 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		) {
 			const operator = previous()
 			const right = expression()
-			error(operator, "Binary operator without left operand")
+			error(operator, 'Binary operator without left operand')
 			return binaryErrorExpr(operator, right)
 		}
-		
+
 		return expression()
 	}
 
 	const expressionSeries = makeBinary(binaryError, 'COMMA')
-	
+
 	function printStatement() {
 		const value = expressionSeries()
 		consume('SEMICOLON', "Expect ';' after value.")
 		return printStmt(value)
 	}
-	
+
 	function expressionStatement() {
 		const expr = expressionSeries()
 		consume('SEMICOLON', "Expect ';' after expression.")
 		return expressionStmt(expr)
 	}
-	
+
 	function statement(): Stmt {
-		return match('PRINT')
-			? printStatement()
-			: expressionStatement()
+		return match('PRINT') ? printStatement() : expressionStatement()
 	}
 
 	function synchronize() {
@@ -205,10 +205,32 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		}
 	}
 
+	function variableDeclaration() {
+		const name = consume('IDENTIFIER', 'Expect variable name.')
+		const initializer = match('EQUAL') ? expression() : null
+		consume('SEMICOLON', "Expect ';' after variable declaration.")
+		return varStmt(name, initializer)
+	}
+
+	function declaration() {
+		try {
+			return match('VAR') ? variableDeclaration() : statement()
+		} catch (e) {
+			if (e instanceof ParseError) {
+				synchronize()
+				return null
+			}
+			throw e
+		}
+	}
+
 	try {
-		const statements = []
+		const statements: Stmt[] = []
 		while (!isAtEnd()) {
-			statements.push(statement())
+			const stmt = declaration()
+			if (stmt) {
+				statements.push(stmt)
+			}
 		}
 		return statements
 	} catch (e) {
