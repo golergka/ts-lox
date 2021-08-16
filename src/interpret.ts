@@ -128,10 +128,22 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
+function execute(statement: Stmt) {
+	switch (statement.type) {
+		case 'expression':
+			evaluate(statement.expression)
+			return null
+		case 'print':
+			const value = evaluate(statement.expression)
+			console.log(stringify(value))
+			return value
+	}
+}
+
 export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	try {
 		for (const statement of statements) {
-			evaluate(statement.expression)
+			execute(statement)
 		}
 	} catch (e) {
 		if (e instanceof RuntimeError) {
