@@ -5,7 +5,7 @@ import {
 	literalExpr,
 	unaryExpr
 } from './generated/Expr'
-import { expressionStmt, varStmt } from './generated/Stmt'
+import { expressionStmt, printStmt, varStmt, whileStmt } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './Token'
 import { mock, instance, verify, anything } from 'ts-mockito'
@@ -249,6 +249,28 @@ describe(`parseTokens`, () => {
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), undefined)
 			])
 		})
+		
+		it('while (true) print "hello world"', () => {
+			const tokens: Token[] = [
+				new Token('WHILE', 'while', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('TRUE', 'true', true, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('PRINT', 'print', undefined, 1),
+				new Token('STRING', '"hello world"', 'hello world', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				whileStmt(
+					literalExpr(true),
+					printStmt(
+						literalExpr('hello world'))
+				)
+			])
+		})
+
 	})
 
 	describe('allowExpressions: true', () => {

@@ -8,7 +8,7 @@ import {
 	literalExpr,
 	variableExpr
 } from './generated/Expr'
-import { expressionStmt, varStmt } from './generated/Stmt'
+import { expressionStmt, ifStmt, varStmt, whileStmt } from './generated/Stmt'
 import { evaluate, interpret, InterpreterContext } from './interpret'
 import { Token } from './Token'
 
@@ -61,7 +61,7 @@ describe('evaluate', () => {
 			const result = evaluate(env, expr)
 			expect(result).toEqual(false)
 		})
-		
+
 		it('true&&false', () => {
 			const expr = binaryExpr(
 				literalExpr(true),
@@ -69,9 +69,9 @@ describe('evaluate', () => {
 				literalExpr(false)
 			)
 			const result = evaluate(env, expr)
-			expect(result).toEqual(false)	
+			expect(result).toEqual(false)
 		})
-		
+
 		it('true&&true', () => {
 			const expr = binaryExpr(
 				literalExpr(true),
@@ -79,7 +79,7 @@ describe('evaluate', () => {
 				literalExpr(true)
 			)
 			const result = evaluate(env, expr)
-			expect(result).toEqual(true)	
+			expect(result).toEqual(true)
 		})
 
 		it('"abc"&&"cde"', () => {
@@ -89,7 +89,7 @@ describe('evaluate', () => {
 				literalExpr('cde')
 			)
 			const result = evaluate(env, expr)
-			expect(result).toEqual("cde")	
+			expect(result).toEqual('cde')
 		})
 
 		it('"abc"||"cde"', () => {
@@ -99,9 +99,9 @@ describe('evaluate', () => {
 				literalExpr('cde')
 			)
 			const result = evaluate(env, expr)
-			expect(result).toEqual("abc")	
+			expect(result).toEqual('abc')
 		})
-		
+
 		it('false||"cde"', () => {
 			const expr = binaryExpr(
 				literalExpr(false),
@@ -109,7 +109,7 @@ describe('evaluate', () => {
 				literalExpr('cde')
 			)
 			const result = evaluate(env, expr)
-			expect(result).toEqual("cde")	
+			expect(result).toEqual('cde')
 		})
 	})
 
@@ -193,9 +193,9 @@ describe('evaluate', () => {
 			const result = evaluate(env, expr)
 			expect(result).toEqual(2)
 		})
-		
+
 		it('throws on undefined, but uninitialized variable access', () => {
-			env.define(new Token('IDENTIFIER', 'x', undefined, 1), undefined)	
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), undefined)
 			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
 			expect(() => evaluate(env, expr)).toThrow()
 		})
@@ -214,14 +214,15 @@ describe('intepret', () => {
 
 	describe('variables', () => {
 		it('defines variable with assignment', () => {
-			interpret(ctx, [
+			const stmts = [
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1))
-			])
+			]
+			interpret(ctx, stmts)
 			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
 		})
 
 		it('defines variable and assigns later', () => {
-			interpret(ctx, [
+			const stmts = [
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), undefined),
 				expressionStmt(
 					assignmentExpr(
@@ -229,8 +230,51 @@ describe('intepret', () => {
 						literalExpr(1)
 					)
 				)
-			])
+			]
+			interpret(ctx, stmts)
 			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
+		})
+	})
+
+	describe('control flow', () => {
+		it('runs an if block', () => {
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), undefined)
+			const stmts = [
+				ifStmt(
+					literalExpr(true),
+					expressionStmt(
+						assignmentExpr(
+							new Token('IDENTIFIER', 'x', undefined, 1),
+							literalExpr(1)
+						)
+					),
+					expressionStmt(
+						assignmentExpr(
+							new Token('IDENTIFIER', 'x', undefined, 1),
+							literalExpr(2)
+						)
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
+		})
+		
+		it('runs a while block', () => {
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), true)
+			const stmts = [
+				whileStmt(
+					variableExpr(new Token('IDENTIFIER', 'x', undefined, 1)),
+					expressionStmt(
+						assignmentExpr(
+							new Token('IDENTIFIER', 'x', undefined, 1),
+							literalExpr(false)
+						)
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(false)
 		})
 	})
 })

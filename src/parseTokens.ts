@@ -15,7 +15,8 @@ import {
 	ifStmt,
 	printStmt,
 	Stmt,
-	varStmt
+	varStmt,
+	whileStmt
 } from './generated/Stmt'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
@@ -214,6 +215,14 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		return printStmt(value)
 	}
 
+	function whileStatement() {
+		consume('LEFT_PAREN', "Expect '(' after 'while'.")
+		const condition = expression()
+		consume('RIGHT_PAREN', "Expect ')' after condition.")
+		const body = statement(false)
+		return whileStmt(condition, body)
+	}
+
 	function blockStatement(): Stmt[] {
 		const statements: Stmt[] = []
 
@@ -246,6 +255,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 	function statement(allowExpressions: boolean): Stmt|Expr {
 		if (match('IF')) return ifStatement()
 		if (match('PRINT')) return printStatement()
+		if (match('WHILE')) return whileStatement()
 		if (match('LEFT_BRACE')) return blockStmt(blockStatement())
 		return expressionStatement(allowExpressions)
 	}
@@ -304,6 +314,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 				case 'print':
 				case 'var':
 				case 'if':
+				case 'while':
 					statements.push(first)
 					break
 				// All possible expressions

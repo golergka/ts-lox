@@ -184,6 +184,12 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 			}
 			return null
 		}
+		case 'while': {
+			while (isTruthy(evaluate(env, stmt.condition))) {
+				execute(env, stmt.body)
+			}
+			return null
+		}
 	}
 }
 

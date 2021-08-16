@@ -80,10 +80,28 @@ export function varStmt(
     }
 }
 
+export interface WhileStmt {
+    type: 'while'
+    condition: Expr
+    body: Stmt
+}
+
+export function whileStmt(
+    condition: Expr,
+    body: Stmt,
+): WhileStmt {
+    return {
+        type: 'while',
+        condition,
+        body,
+    }
+}
+
 export type Stmt =
     | BlockStmt
     | ExpressionStmt
     | IfStmt
     | PrintStmt
     | VarStmt
+    | WhileStmt
 
