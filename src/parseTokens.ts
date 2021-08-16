@@ -1,3 +1,4 @@
+import { isExpressionStatement } from 'typescript'
 import {
 	binaryErrorExpr,
 	binaryExpr,
@@ -7,11 +8,12 @@ import {
 	literalExpr,
 	unaryExpr
 } from './generated/Expr'
+import { expressionStmt, printStmt, Stmt } from './generated/Stmt'
 import { loxError } from './lox'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
-export function parseTokens(tokens: Token[]) {
+export function parseTokens(tokens: Token[]): Stmt[] {
 	let current = 0
 	
 	function peek() {
@@ -155,6 +157,24 @@ export function parseTokens(tokens: Token[]) {
 	}
 
 	const expressionSeries = makeBinary(binaryError, 'COMMA')
+	
+	function printStatement() {
+		const value = expressionSeries()
+		consume('SEMICOLON', "Expect ';' after value.")
+		return printStmt(value)
+	}
+	
+	function expressionStatement() {
+		const expr = expressionSeries()
+		consume('SEMICOLON', "Expect ';' after expression.")
+		return expressionStmt(expr)
+	}
+	
+	function statement(): Stmt {
+		return match('PRINT')
+			? printStatement()
+			: expressionStatement()
+	}
 
 	function synchronize() {
 		advance()
@@ -179,10 +199,14 @@ export function parseTokens(tokens: Token[]) {
 	}
 
 	try {
-		return expressionSeries()
+		const statements = []
+		while (!isAtEnd()) {
+			statements.push(statement())
+		}
+		return statements
 	} catch (e) {
 		if (e instanceof ParseError) {
-			return null
+			return []
 		} else {
 			throw e
 		}

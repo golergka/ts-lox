@@ -1,4 +1,5 @@
 import { Expr } from './generated/Expr'
+import { RuntimeError } from './interpret'
 
 export function printExpr(expr: Expr): string {
 	switch (expr.type) {
@@ -10,6 +11,15 @@ export function printExpr(expr: Expr): string {
 			return expr.value === null ? 'nil' : expr.value.toString()
 		case 'unary':
 			return parenthesize(expr.operator.lexeme, expr.right)
+		case 'binaryError':
+			throw new RuntimeError(expr.operator, 'Binary expression error')
+		case 'conditional':
+			return parenthesize(
+				'if',
+				expr.condition,
+				expr.consequent,
+				expr.alternative
+			)
 	}
 }
 

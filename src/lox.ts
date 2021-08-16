@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
-import { interpretExpr, RuntimeError } from './interpretExpr'
+import { interpret, RuntimeError } from './interpret'
 import { parseTokens } from './parseTokens'
 import { printExpr } from './printExpr'
-import { scanTokens } from './scanTokens'
+import { scan } from './scan'
 import { Token } from './Token'
 
 let hadError = false
@@ -38,12 +38,12 @@ export async function runPrompt() {
 }
 
 function run(source: string, filename?: string) {
-	const tokens = scanTokens(source)
+	const tokens = scan(source)
 	const expression = parseTokens(tokens)
 	
 	if (!expression || hadError) return
 	
-	interpretExpr(expression)
+	interpret(expression)
 }
 
 export function report(line: number, message: string): void

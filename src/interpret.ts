@@ -1,6 +1,6 @@
 import { thrw } from 'thrw'
-import { isTryStatement } from 'typescript'
 import { Expr } from './generated/Expr'
+import { Stmt } from './generated/Stmt'
 import { runtimeError } from './lox'
 import { Token } from './Token'
 
@@ -107,6 +107,7 @@ export function evaluate(expr: Expr): Object | null {
         case 'binaryError': {
             throw new RuntimeError(expr.operator, `Compilation error`)
         }
+		
 	}
 }
 
@@ -124,10 +125,11 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
-export function interpretExpr(expr: Expr) {
+export function interpret(statements: Stmt[]) {
 	try {
-		const result = evaluate(expr)
-		console.log(stringify(result))
+		for (const statement of statements) {
+			evaluate(statement.expression)
+		}
 	} catch (e) {
 		if (e instanceof RuntimeError) {
 			runtimeError(e)

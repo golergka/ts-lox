@@ -9,7 +9,7 @@ const isAlpha = (c: string) =>
 
 const isAlphaNumeric = (c: string) => isAlpha(c) || isDigit(c)
 
-export function scanTokens(source: string): Token[] {
+export function scan(source: string): Token[] {
 	const tokens: Token[] = []
 	let start: number = 0
 	let current: number = 0

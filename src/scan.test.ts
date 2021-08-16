@@ -1,4 +1,4 @@
-import { scanTokens } from './scanTokens'
+import { scan } from './scan'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
@@ -6,7 +6,7 @@ describe('Scanner', () => {
 	describe('Single tokens', () => {
 		function testSingleToken(input: string, type: TokenType, literal: any) {
 			it(input, () => {
-				const tokens = scanTokens(input)
+				const tokens = scan(input)
 				expect(tokens).toEqual([
 					new Token(type, input, literal, 1),
 					new Token('EOF', '', undefined, 1)
@@ -23,13 +23,13 @@ describe('Scanner', () => {
 	})
 
 	it('', () => {
-		const tokens = scanTokens('')
+		const tokens = scan('')
 		expect(tokens).toEqual([new Token('EOF', '', undefined, 1)])
 	})
 
 	describe('line comments', () => {
 		it('(\\n//abc\\n)', () => {
-			const tokens = scanTokens('(\n' + '//abc\n' + ')')
+			const tokens = scan('(\n' + '//abc\n' + ')')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 3),
@@ -40,7 +40,7 @@ describe('Scanner', () => {
 
 	describe('string', () => {
 		it('"abc"', () => {
-			const tokens = scanTokens('"abc"')
+			const tokens = scan('"abc"')
 			expect(tokens).toEqual([
 				new Token('STRING', '"abc"', 'abc', 1),
 				new Token('EOF', '', undefined, 1)
@@ -50,7 +50,7 @@ describe('Scanner', () => {
 
 	describe('block comments', () => {
 		it('(/*abc*/)', () => {
-			const tokens = scanTokens('(/*abc*/)')
+			const tokens = scan('(/*abc*/)')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 1),
@@ -58,7 +58,7 @@ describe('Scanner', () => {
 			])
 		})
 		it('(/*abc*/', () => {
-			const tokens = scanTokens('(/*abc*/')
+			const tokens = scan('(/*abc*/')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('EOF', '', undefined, 1)
@@ -67,7 +67,7 @@ describe('Scanner', () => {
 	})
 
 	it('true?1:2', () => {
-		const tokens = scanTokens('true?1:2')
+		const tokens = scan('true?1:2')
 		expect(tokens).toEqual([
 			new Token('TRUE', 'true', true, 1),
 			new Token('QUESTION', '?', undefined, 1),
@@ -76,5 +76,16 @@ describe('Scanner', () => {
 			new Token('NUMBER', '2', 2, 1),
 			new Token('EOF', '', undefined, 1)
 		])
+	})
+	
+	describe('expression statement', () => {
+		it('true;', () => {	
+			const tokens = scan('true;')
+			expect(tokens).toEqual([
+				new Token('TRUE', 'true', true, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			])	
+		})
 	})
 })
