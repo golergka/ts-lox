@@ -25,5 +25,11 @@ export function rpnExpr(expr: Expr): string {
 			].join(' ')
 		case 'variable':
 			return expr.name.lexeme
+		case 'assignment':
+			return [
+				rpnExpr(expr.value),
+				expr.name,
+				'='
+			].join(' ')
 	}
 }

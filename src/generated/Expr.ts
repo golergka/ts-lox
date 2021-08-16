@@ -20,6 +20,23 @@ export function conditionalExpr(
     }
 }
 
+export interface AssignmentExpr {
+    type: 'assignment'
+    name: Token
+    value: Expr
+}
+
+export function assignmentExpr(
+    name: Token,
+    value: Expr,
+): AssignmentExpr {
+    return {
+        type: 'assignment',
+        name,
+        value,
+    }
+}
+
 export interface BinaryExpr {
     type: 'binary'
     left: Expr
@@ -118,6 +135,7 @@ export function variableExpr(
 
 export type Expr =
     | ConditionalExpr
+    | AssignmentExpr
     | BinaryExpr
     | BinaryErrorExpr
     | GroupingExpr

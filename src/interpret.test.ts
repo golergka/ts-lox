@@ -1,13 +1,20 @@
 import { Environment } from './environment'
-import { binaryExpr, conditionalExpr, groupingExpr, literalExpr, variableExpr } from './generated/Expr'
+import {
+	assignmentExpr,
+	binaryExpr,
+	conditionalExpr,
+	groupingExpr,
+	literalExpr,
+	variableExpr
+} from './generated/Expr'
 import { evaluate } from './interpret'
 import { Token } from './Token'
 
 describe('evaluate', () => {
 	let env: Environment
-	
+
 	beforeEach(() => {
-		env = new Environment()	
+		env = new Environment()
 	})
 
 	describe(`literals`, () => {
@@ -103,18 +110,36 @@ describe('evaluate', () => {
 			expect(result).toEqual(5)
 		})
 	})
-	
+
 	describe(`variables`, () => {
 		it('gets a declared variable', () => {
-			env.define('x', 1)
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), 1)
 			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
 			const result = evaluate(env, expr)
-			expect(result).toEqual(1)	
+			expect(result).toEqual(1)
+		})
+
+		it('throws on an undefined variable access', () => {
+			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
+			expect(() => evaluate(env, expr)).toThrow()
+		})
+
+		it('throws on an undefined variable assignment', () => {
+			const expr = assignmentExpr(
+				new Token('IDENTIFIER', 'x', null, 1),
+				literalExpr(1)
+			)
+			expect(() => evaluate(env, expr)).toThrow()
 		})
 		
-		it('throws on an undefined variable', () => {
-			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
-			expect(() => evaluate(env, expr)).toThrow()	
+		it('assigns a declared variable', () => {
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), 1)
+			const expr = assignmentExpr(
+				new Token('IDENTIFIER', 'x', null, 1),
+				literalExpr(2)
+			)
+			const result = evaluate(env, expr)
+			expect(result).toEqual(2)
 		})
 	})
 })

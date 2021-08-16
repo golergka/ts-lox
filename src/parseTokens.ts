@@ -1,4 +1,5 @@
 import {
+	assignmentExpr,
 	binaryErrorExpr,
 	binaryExpr,
 	conditionalExpr,
@@ -138,8 +139,26 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		return expr
 	}
 
+	function assignment(): Expr {
+		const expr = conditional()
+		
+		if (match('EQUAL')) {
+			const equals = previous()
+			const value = assignment()
+
+			if (expr.type === 'variable') {
+				const name = expr.name
+				return assignmentExpr(name, value)
+			}
+
+			error(equals, 'Invalid assignment target.')
+		}
+		
+		return expr
+	}
+
 	function expression() {
-		return conditional()
+		return assignment()
 	}
 
 	function binaryError() {

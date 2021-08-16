@@ -22,6 +22,8 @@ export function printExpr(expr: Expr): string {
 			)
 		case 'variable':
 			return expr.name.lexeme
+		case 'assignment':
+			return parenthesize(expr.name.lexeme, expr.value)
 	}
 }
 

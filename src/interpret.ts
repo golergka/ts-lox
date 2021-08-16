@@ -116,6 +116,12 @@ export function evaluate(env: Environment, expr: Expr): Object | null {
 		case 'variable': {
 			return env.get(expr.name)
 		}
+		
+		case 'assignment': {
+			const value = evaluate(env, expr.value)
+			env.assign(expr.name, value)
+			return value
+		}
 	}
 }
 
@@ -147,7 +153,7 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 			const value = stmt.initializer !== null
 				? evaluate(env, stmt.initializer)
 				: null
-			env.define(stmt.name.lexeme, value)
+			env.define(stmt.name, value)
 			return null
 		}
 	}

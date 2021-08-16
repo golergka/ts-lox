@@ -13,6 +13,7 @@ defineAst(
 	'Expr',
 	[
 		'Conditional : Expr condition, Expr consequent, Expr alternative',
+		'Assignment  : Token name, Expr value',
 		'Binary      : Expr left, Token operator, Expr right',
 		'BinaryError : Token operator, Expr right',
 		'Grouping    : Expr expression',

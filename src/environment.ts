@@ -1,4 +1,5 @@
 import { thrw } from 'thrw'
+import { RuntimeError } from './interpret'
 import { Token } from './Token'
 
 export class Environment {
@@ -7,8 +8,8 @@ export class Environment {
 		Object | null
 	>()
 
-	public define(name: string, value: Object | null): void {
-		this.values.set(name, value)
+	public define(name: Token, value: Object | null): void {
+		this.values.set(name.lexeme, value)
 	}
 
 	public get(name: Token) {
@@ -16,4 +17,13 @@ export class Environment {
 			this.values.get(name.lexeme) || thrw(`Undefined variable: ${name.lexeme}`)
 		)
 	}
+
+	public assign(name: Token, value: Object | null) {
+		if (this.values.has(name.lexeme)) {
+			this.values.set(name.lexeme, value)
+		} else {
+			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
+		}
+	}
+
 }
