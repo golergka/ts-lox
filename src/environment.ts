@@ -7,6 +7,8 @@ export class Environment {
 		string,
 		Object | null
 	>()
+	
+	public constructor(private readonly enclosing: Environment | null = null) {}
 
 	public define(name: Token, value: Object | null): void {
 		this.values.set(name.lexeme, value)
@@ -21,6 +23,8 @@ export class Environment {
 	public assign(name: Token, value: Object | null) {
 		if (this.values.has(name.lexeme)) {
 			this.values.set(name.lexeme, value)
+		} else if (this.enclosing !== null) {
+			return this.enclosing.get(name)
 		} else {
 			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
 		}
