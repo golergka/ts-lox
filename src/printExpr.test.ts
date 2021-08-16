@@ -3,7 +3,8 @@ import {
 	Expr,
 	groupingExpr,
 	literalExpr,
-	unaryExpr
+	unaryExpr,
+	variableExpr
 } from './generated/Expr'
 import { printExpr } from './printExpr'
 import { Token } from './Token'
@@ -19,5 +20,17 @@ describe(`printExpr`, () => {
 		const result = printExpr(expr)
 
 		expect(result).toMatchInlineSnapshot(`"(* (- 123), (group 45.67))"`)
+	})
+	
+	it(`handles variables`, () => {
+		const expr: Expr = binaryExpr(
+			literalExpr(1),
+			new Token('PLUS', '+', null, 1),
+			variableExpr(new Token('STRING', 'x', null, 1))	
+		)
+		
+		const result = printExpr(expr)
+
+		expect(result).toMatchInlineSnapshot(`"(+ 1, x)"`)
 	})
 })

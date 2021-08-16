@@ -17,15 +17,25 @@ defineAst(
 		'BinaryError : Token operator, Expr right',
 		'Grouping    : Expr expression',
 		'Literal     : Object|null value',
-		'Unary       : Token operator, Expr right'
+		'Unary       : Token operator, Expr right',
+		'Variable    : Token name'
 	],
 	[[['Token'], '../Token']]
 )
 
-defineAst(outputDir, 'Stmt', [
-	'Expression : Expr expression',
-	'Print      : Expr expression'
-], [[['Expr'], './Expr']])
+defineAst(
+	outputDir,
+	'Stmt',
+	[
+		'Expression : Expr expression',
+		'Print      : Expr expression',
+		'Var        : Token name, Expr initializer'
+	],
+	[
+		[['Expr'], './Expr'],
+		[['Token'], '../Token']
+	]
+)
 
 async function defineAst(
 	outputDir: string,

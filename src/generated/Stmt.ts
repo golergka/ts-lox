@@ -1,4 +1,5 @@
 import { Expr } from './Expr'
+import { Token } from '../Token'
 
 export interface ExpressionStmt {
     type: 'expression'
@@ -28,7 +29,25 @@ export function printStmt(
     }
 }
 
+export interface VarStmt {
+    type: 'var'
+    name: Token
+    initializer: Expr
+}
+
+export function varStmt(
+    name: Token,
+    initializer: Expr,
+): VarStmt {
+    return {
+        type: 'var',
+        name,
+        initializer,
+    }
+}
+
 export type Stmt =
     | ExpressionStmt
     | PrintStmt
+    | VarStmt
 

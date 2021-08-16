@@ -20,6 +20,8 @@ export function printExpr(expr: Expr): string {
 				expr.consequent,
 				expr.alternative
 			)
+		case 'variable':
+			return expr.name.lexeme
 	}
 }
 

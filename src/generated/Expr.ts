@@ -102,6 +102,20 @@ export function unaryExpr(
     }
 }
 
+export interface VariableExpr {
+    type: 'variable'
+    name: Token
+}
+
+export function variableExpr(
+    name: Token,
+): VariableExpr {
+    return {
+        type: 'variable',
+        name,
+    }
+}
+
 export type Expr =
     | ConditionalExpr
     | BinaryExpr
@@ -109,4 +123,5 @@ export type Expr =
     | GroupingExpr
     | LiteralExpr
     | UnaryExpr
+    | VariableExpr
 

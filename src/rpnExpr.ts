@@ -23,5 +23,7 @@ export function rpnExpr(expr: Expr): string {
 				rpnExpr(expr.alternative),
 				'?'
 			].join(' ')
+		case 'variable':
+			return expr.name.lexeme
 	}
 }

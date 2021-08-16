@@ -111,6 +111,9 @@ export function evaluate(expr: Expr): Object | null {
             throw new RuntimeError(expr.operator, `Compilation error`)
         }
 		
+		case 'variable': {
+			throw new RuntimeError(expr.name, `Variables not implemented yet`)
+		}
 	}
 }
 
