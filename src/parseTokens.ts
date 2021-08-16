@@ -9,7 +9,13 @@ import {
 	unaryExpr,
 	variableExpr
 } from './generated/Expr'
-import { expressionStmt, printStmt, Stmt, varStmt } from './generated/Stmt'
+import {
+	blockStmt,
+	expressionStmt,
+	printStmt,
+	Stmt,
+	varStmt
+} from './generated/Stmt'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
@@ -141,7 +147,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 
 	function assignment(): Expr {
 		const expr = conditional()
-		
+
 		if (match('EQUAL')) {
 			const equals = previous()
 			const value = assignment()
@@ -153,7 +159,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 
 			error(equals, 'Invalid assignment target.')
 		}
-		
+
 		return expr
 	}
 
@@ -192,6 +198,21 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		return printStmt(value)
 	}
 
+	function blockStatement(): Stmt[] {
+		const statements: Stmt[] = []
+
+		while (!check('RIGHT_BRACE') && !isAtEnd()) {
+			const stmt = declaration()
+			if (stmt !== null) {
+				statements.push(stmt)
+			}
+		}
+
+		consume('RIGHT_BRACE', "Expect '}' after block.")
+
+		return statements
+	}
+
 	function expressionStatement() {
 		const expr = expressionSeries()
 		consume('SEMICOLON', "Expect ';' after expression.")
@@ -199,7 +220,9 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 	}
 
 	function statement(): Stmt {
-		return match('PRINT') ? printStatement() : expressionStatement()
+		if (match('PRINT')) return printStatement()
+		if (match('LEFT_BRACE')) return blockStmt(blockStatement())
+		return expressionStatement()
 	}
 
 	function synchronize() {

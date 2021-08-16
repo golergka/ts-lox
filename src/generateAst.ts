@@ -28,6 +28,7 @@ defineAst(
 	outputDir,
 	'Stmt',
 	[
+		'Block 		: Stmt[] statements',
 		'Expression : Expr expression',
 		'Print      : Expr expression',
 		'Var        : Token name, Expr|null initializer'

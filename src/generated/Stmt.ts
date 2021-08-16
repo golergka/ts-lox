@@ -1,6 +1,20 @@
 import { Expr } from './Expr'
 import { Token } from '../Token'
 
+export interface BlockStmt {
+    type: 'block'
+    statements: Stmt[]
+}
+
+export function blockStmt(
+    statements: Stmt[],
+): BlockStmt {
+    return {
+        type: 'block',
+        statements,
+    }
+}
+
 export interface ExpressionStmt {
     type: 'expression'
     expression: Expr
@@ -47,6 +61,7 @@ export function varStmt(
 }
 
 export type Stmt =
+    | BlockStmt
     | ExpressionStmt
     | PrintStmt
     | VarStmt

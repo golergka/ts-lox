@@ -139,6 +139,12 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
+function executeBlock(env: Environment, stmts: Stmt[]): void {
+	for (const stmt of stmts) {
+		execute(env, stmt)
+	}
+}
+
 function execute(env: Environment, stmt: Stmt): Object|null {
 	switch (stmt.type) {
 		case 'expression':
@@ -156,14 +162,16 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 			env.define(stmt.name, value)
 			return null
 		}
+		case 'block': {
+			executeBlock(new Environment(env), stmt.statements)
+			return null
+		}
 	}
 }
 
 export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	try {
-		for (const statement of statements) {
-			execute(ctx.environment, statement)
-		}
+		executeBlock(ctx.environment, statements)
 	} catch (e) {
 		if (e instanceof RuntimeError) {
 			ctx.runtimeError(e)
