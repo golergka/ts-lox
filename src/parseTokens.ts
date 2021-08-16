@@ -1,4 +1,3 @@
-import { isExpressionStatement } from 'typescript'
 import {
 	binaryErrorExpr,
 	binaryExpr,
@@ -9,11 +8,15 @@ import {
 	unaryExpr
 } from './generated/Expr'
 import { expressionStmt, printStmt, Stmt } from './generated/Stmt'
-import { loxError } from './lox'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
-export function parseTokens(tokens: Token[]): Stmt[] {
+export interface ParserContext {
+	parserError(line: number, message: string): void
+	parserError(line: number, where: string, message: string): void
+}
+
+export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 	let current = 0
 	
 	function peek() {
@@ -52,7 +55,11 @@ export function parseTokens(tokens: Token[]): Stmt[] {
 	class ParseError extends Error {}
 
 	function error(token: Token, message: string) {
-		loxError(token, message)
+		if (token.type === 'EOF') {
+			ctx.parserError(token.line, " at end", message)
+		} else {
+			ctx.parserError(token.line, ` at '${token.lexeme}'`, message)
+		}
 		return new ParseError()
 	}
 

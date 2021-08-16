@@ -1,4 +1,4 @@
-import { report } from './lox'
+import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 import { keywords, TokenType } from './TokenType'
 
@@ -9,7 +9,7 @@ const isAlpha = (c: string) =>
 
 const isAlphaNumeric = (c: string) => isAlpha(c) || isDigit(c)
 
-export function scan(source: string): Token[] {
+export function scan(ctx: ParserContext, source: string): Token[] {
 	const tokens: Token[] = []
 	let start: number = 0
 	let current: number = 0
@@ -81,7 +81,7 @@ export function scan(source: string): Token[] {
 					? number()
 					: isAlpha(c)
 					? identifier()
-					: report(line, 'Unexpected character.')
+					: ctx.parserError(line, 'Unexpected character.')
 		}
 	}
 
@@ -92,7 +92,7 @@ export function scan(source: string): Token[] {
 		}
 
 		if (isAtEnd()) {
-			report(line, 'Unterminated string.')
+			ctx.parserError(line, 'Unterminated string.')
 			return
 		}
 

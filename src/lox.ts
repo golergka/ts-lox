@@ -1,19 +1,45 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
-import { interpret, RuntimeError } from './interpret'
-import { parseTokens } from './parseTokens'
-import { printExpr } from './printExpr'
+import { interpret, InterpreterContext, RuntimeError } from './interpret'
+import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
 import { Token } from './Token'
 
-let hadError = false
-let hadRuntimeError = false
+
+class Context implements ParserContext, InterpreterContext {
+
+	private _hadError = false
+	private _hadRuntimeError = false
+	
+	public get hadError() {
+		return this._hadError
+	}
+	
+	public get hadRuntimeError() {
+		return this._hadRuntimeError
+	}
+
+	parserError(line: number, message: string): void
+	parserError(line: number, where: string, message: string): void
+	parserError(line: number, arg1: string, arg2?: string) {
+		const where = arg2 ? arg1 : ''
+		const message = arg2 || arg1
+		console.log(`[line ${line}] Error${where}: ${message}`)
+		this._hadError = true
+	}
+
+	runtimeError(error: RuntimeError) {
+		console.log(error.message + `\n[line ${error.token.line}]`)
+		this._hadRuntimeError = true
+	}
+}
 
 export function runFile(filename: string) {
+	const ctx = new Context()
 	const code = fs.readFileSync(filename, "utf8")
-	run(code, filename)
-	if (hadError) process.exit(65)
-	if (hadRuntimeError) process.exit(70)
+	run(ctx, code, filename)
+	if (ctx.hadError) process.exit(65)
+	if (ctx.hadRuntimeError) process.exit(70)
 }
 
 export async function runPrompt() {
@@ -31,39 +57,16 @@ export async function runPrompt() {
 	while (true) {
 		const line = await question("> ")
 		if (line === null) break;
-		run(line)
-		hadError = false
-		hadRuntimeError = false
+		const ctx = new Context()
+		run(ctx, line)
 	}
 }
 
-function run(source: string, filename?: string) {
-	const tokens = scan(source)
-	const expression = parseTokens(tokens)
+function run(ctx: Context, source: string, filename?: string) {
+	const tokens = scan(ctx, source)
+	const expression = parseTokens(ctx, tokens)
 	
-	if (!expression || hadError) return
+	if (!expression || ctx.hadError) return
 	
-	interpret(expression)
-}
-
-export function report(line: number, message: string): void
-export function report(line: number, where: string, message: string): void
-export function report(line: number, arg1: string, arg2?: string) {
-	const where = arg2 ? arg1 : ''
-	const message = arg2 || arg1
-	console.log(`[line ${line}] Error${where}: ${message}`)
-	hadError = true
-}
-
-export function loxError(token: Token, message: string) {
-	if (token.type === 'EOF') {
-		report(token.line, " at end", message)
-	} else {
-		report(token.line, ` at '${token.lexeme}'`, message)
-	}
-}
-
-export function runtimeError(error: RuntimeError) {
-	console.log(error.message + `\n[line ${error.token.line}]`)
-	hadRuntimeError = true
+	interpret(ctx, expression)
 }

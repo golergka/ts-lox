@@ -1,12 +1,22 @@
+import { mock, instance } from 'ts-mockito'
+import { ParserContext } from './parseTokens'
 import { scan } from './scan'
 import { Token } from './Token'
 import { TokenType } from './TokenType'
 
 describe('Scanner', () => {
+	let mockedCtx: ParserContext
+	let ctx: ParserContext
+	
+	beforeEach(() => {
+		mockedCtx = mock<ParserContext>()
+		ctx = instance(mockedCtx)
+	})
+
 	describe('Single tokens', () => {
 		function testSingleToken(input: string, type: TokenType, literal: any) {
 			it(input, () => {
-				const tokens = scan(input)
+				const tokens = scan(ctx, input)
 				expect(tokens).toEqual([
 					new Token(type, input, literal, 1),
 					new Token('EOF', '', undefined, 1)
@@ -23,13 +33,13 @@ describe('Scanner', () => {
 	})
 
 	it('', () => {
-		const tokens = scan('')
+		const tokens = scan(ctx, '')
 		expect(tokens).toEqual([new Token('EOF', '', undefined, 1)])
 	})
 
 	describe('line comments', () => {
 		it('(\\n//abc\\n)', () => {
-			const tokens = scan('(\n' + '//abc\n' + ')')
+			const tokens = scan(ctx, '(\n' + '//abc\n' + ')')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 3),
@@ -40,7 +50,7 @@ describe('Scanner', () => {
 
 	describe('string', () => {
 		it('"abc"', () => {
-			const tokens = scan('"abc"')
+			const tokens = scan(ctx, '"abc"')
 			expect(tokens).toEqual([
 				new Token('STRING', '"abc"', 'abc', 1),
 				new Token('EOF', '', undefined, 1)
@@ -50,7 +60,7 @@ describe('Scanner', () => {
 
 	describe('block comments', () => {
 		it('(/*abc*/)', () => {
-			const tokens = scan('(/*abc*/)')
+			const tokens = scan(ctx, '(/*abc*/)')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('RIGHT_PAREN', ')', undefined, 1),
@@ -58,7 +68,7 @@ describe('Scanner', () => {
 			])
 		})
 		it('(/*abc*/', () => {
-			const tokens = scan('(/*abc*/')
+			const tokens = scan(ctx, '(/*abc*/')
 			expect(tokens).toEqual([
 				new Token('LEFT_PAREN', '(', undefined, 1),
 				new Token('EOF', '', undefined, 1)
@@ -67,7 +77,7 @@ describe('Scanner', () => {
 	})
 
 	it('true?1:2', () => {
-		const tokens = scan('true?1:2')
+		const tokens = scan(ctx, 'true?1:2')
 		expect(tokens).toEqual([
 			new Token('TRUE', 'true', true, 1),
 			new Token('QUESTION', '?', undefined, 1),
@@ -80,7 +90,7 @@ describe('Scanner', () => {
 	
 	describe('expression statement', () => {
 		it('true;', () => {	
-			const tokens = scan('true;')
+			const tokens = scan(ctx, 'true;')
 			expect(tokens).toEqual([
 				new Token('TRUE', 'true', true, 1),
 				new Token('SEMICOLON', ';', undefined, 1),

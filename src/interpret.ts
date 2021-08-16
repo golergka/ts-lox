@@ -1,8 +1,17 @@
 import { thrw } from 'thrw'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
-import { runtimeError } from './lox'
 import { Token } from './Token'
+
+export class RuntimeError extends Error {
+	constructor(public readonly token: Token, message: string) {
+		super(message)
+	}
+}
+
+export interface InterpreterContext {
+	runtimeError(error: RuntimeError): void
+}
 
 function isTruthy(right: Object | null) {
 	return !!right
@@ -10,12 +19,6 @@ function isTruthy(right: Object | null) {
 
 function isEqual(left: any, right: any): boolean {
 	return left === right
-}
-
-export class RuntimeError extends Error {
-	constructor(public readonly token: Token, message: string) {
-		super(message)
-	}
 }
 
 function checkNumberOperand(
@@ -125,14 +128,14 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
-export function interpret(statements: Stmt[]) {
+export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	try {
 		for (const statement of statements) {
 			evaluate(statement.expression)
 		}
 	} catch (e) {
 		if (e instanceof RuntimeError) {
-			runtimeError(e)
+			ctx.runtimeError(e)
 		}
 		throw e
 	}
