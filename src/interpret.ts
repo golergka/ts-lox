@@ -156,9 +156,9 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 			return value
 		}
 		case 'var': {
-			const value = stmt.initializer !== null
+			const value = stmt.initializer
 				? evaluate(env, stmt.initializer)
-				: null
+				: stmt.initializer
 			env.define(stmt.name, value)
 			return null
 		}

@@ -3,21 +3,27 @@ import { RuntimeError } from './interpret'
 import { Token } from './Token'
 
 export class Environment {
-	private readonly values: Map<string, Object | null> = new Map<
+
+	private readonly values: Map<string, Object | null | undefined> = new Map<
 		string,
-		Object | null
+		Object | null | undefined
 	>()
 	
 	public constructor(private readonly enclosing: Environment | null = null) {}
 
-	public define(name: Token, value: Object | null): void {
+	public define(name: Token, value: Object | null | undefined): void {
 		this.values.set(name.lexeme, value)
 	}
 
 	public get(name: Token) {
-		return (
-			this.values.get(name.lexeme) || thrw(`Undefined variable: ${name.lexeme}`)
-		)
+		if (!this.values.has(name.lexeme)) {
+			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
+		}
+		const value = this.values.get(name.lexeme)
+		if (value === undefined) {
+			throw new RuntimeError(name, `Unassigned variable ${name.lexeme}`)
+		}
+		return value
 	}
 
 	public assign(name: Token, value: Object | null) {

@@ -31,7 +31,7 @@ defineAst(
 		'Block 		: Stmt[] statements',
 		'Expression : Expr expression',
 		'Print      : Expr expression',
-		'Var        : Token name, Expr|null initializer'
+		'Var        : Token name, Expr|null|undefined initializer'
 	],
 	[
 		[['Expr'], './Expr'],

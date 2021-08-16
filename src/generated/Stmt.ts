@@ -46,12 +46,12 @@ export function printStmt(
 export interface VarStmt {
     type: 'var'
     name: Token
-    initializer: Expr|null
+    initializer: Expr|null|undefined
 }
 
 export function varStmt(
     name: Token,
-    initializer: Expr|null,
+    initializer: Expr|null|undefined,
 ): VarStmt {
     return {
         type: 'var',

@@ -1,3 +1,4 @@
+import { instance, mock, when } from 'ts-mockito'
 import { Environment } from './environment'
 import {
 	assignmentExpr,
@@ -7,16 +8,17 @@ import {
 	literalExpr,
 	variableExpr
 } from './generated/Expr'
-import { evaluate } from './interpret'
+import { expressionStmt, varStmt } from './generated/Stmt'
+import { evaluate, interpret, InterpreterContext } from './interpret'
 import { Token } from './Token'
 
+let env: Environment
+
+beforeEach(() => {
+	env = new Environment()
+})
+
 describe('evaluate', () => {
-	let env: Environment
-
-	beforeEach(() => {
-		env = new Environment()
-	})
-
 	describe(`literals`, () => {
 		it(`true`, () => {
 			const expr = literalExpr(true)
@@ -131,7 +133,7 @@ describe('evaluate', () => {
 			)
 			expect(() => evaluate(env, expr)).toThrow()
 		})
-		
+
 		it('assigns a declared variable', () => {
 			env.define(new Token('IDENTIFIER', 'x', undefined, 1), 1)
 			const expr = assignmentExpr(
@@ -140,6 +142,45 @@ describe('evaluate', () => {
 			)
 			const result = evaluate(env, expr)
 			expect(result).toEqual(2)
+		})
+		
+		it('throws on undefined, but uninitialized variable access', () => {
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), undefined)	
+			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
+			expect(() => evaluate(env, expr)).toThrow()
+		})
+	})
+})
+
+describe('intepret', () => {
+	let mockedCtx: InterpreterContext
+	let ctx: InterpreterContext
+
+	beforeEach(() => {
+		mockedCtx = mock<InterpreterContext>()
+		when(mockedCtx.environment).thenReturn(env)
+		ctx = instance(mockedCtx)
+	})
+
+	describe('variables', () => {
+		it('defines variable with assignment', () => {
+			interpret(ctx, [
+				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1))
+			])
+			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
+		})
+
+		it('defines variable and assigns later', () => {
+			interpret(ctx, [
+				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), undefined),
+				expressionStmt(
+					assignmentExpr(
+						new Token('IDENTIFIER', 'x', undefined, 1),
+						literalExpr(1)
+					)
+				)
+			])
+			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
 		})
 	})
 })

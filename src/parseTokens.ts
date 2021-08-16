@@ -257,7 +257,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	function variableDeclaration() {
 		const name = consume('IDENTIFIER', 'Expect variable name.')
-		const initializer = match('EQUAL') ? expression() : null
+		const initializer = match('EQUAL') ? expression() : undefined
 		consume('SEMICOLON', "Expect ';' after variable declaration.")
 		return varStmt(name, initializer)
 	}

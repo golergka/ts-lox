@@ -5,7 +5,7 @@ import {
 	literalExpr,
 	unaryExpr
 } from './generated/Expr'
-import { expressionStmt } from './generated/Stmt'
+import { expressionStmt, varStmt } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './Token'
 import { mock, instance, verify, anything } from 'ts-mockito'
@@ -219,6 +219,34 @@ describe(`parseTokens`, () => {
 				expressionStmt(
 					conditionalExpr(literalExpr(true), literalExpr(1), literalExpr(2))
 				)
+			])
+		})
+
+		it('var x=1;', () => {
+			const tokens: Token[] = [
+				new Token('VAR', 'var', undefined, 1),
+				new Token('IDENTIFIER', 'x', undefined, 1),
+				new Token('EQUAL', '=', undefined, 1),
+				new Token('NUMBER', '1', 1, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1))
+			])
+		})
+
+		it('var x;', () => {
+			const tokens: Token[] = [
+				new Token('VAR', 'var', undefined, 1),
+				new Token('IDENTIFIER', 'x', undefined, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), undefined)
 			])
 		})
 	})
