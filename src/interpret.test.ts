@@ -1,14 +1,19 @@
-import { binaryErrorExpr, binaryExpr, conditionalExpr, groupingExpr, literalExpr } from './generated/Expr'
+import { Environment } from './environment'
+import { binaryExpr, conditionalExpr, groupingExpr, literalExpr, variableExpr } from './generated/Expr'
 import { evaluate } from './interpret'
-import { parseTokens } from './parseTokens'
-import { scan } from './scan'
 import { Token } from './Token'
 
 describe('evaluate', () => {
+	let env: Environment
+	
+	beforeEach(() => {
+		env = new Environment()	
+	})
+
 	describe(`literals`, () => {
 		it(`true`, () => {
 			const expr = literalExpr(true)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(true)
 		})
 	})
@@ -20,7 +25,7 @@ describe('evaluate', () => {
 				new Token('PLUS', '+', null, 1),
 				literalExpr(1)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(2)
 		})
 
@@ -34,7 +39,7 @@ describe('evaluate', () => {
 					literalExpr(1)
 				)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(3)
 		})
 
@@ -44,7 +49,7 @@ describe('evaluate', () => {
 				new Token('GREATER', '>', null, 1),
 				literalExpr(2)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(false)
 		})
 	})
@@ -56,7 +61,7 @@ describe('evaluate', () => {
 				literalExpr(1),
 				literalExpr(2)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(1)
 		})
 
@@ -70,7 +75,7 @@ describe('evaluate', () => {
 				literalExpr(5),
 				literalExpr(3)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(5)
 		})
 	})
@@ -78,7 +83,7 @@ describe('evaluate', () => {
 	describe(`grouping`, () => {
 		it(`(true)`, () => {
 			const expr = groupingExpr(literalExpr(true))
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(true)
 		})
 
@@ -94,8 +99,22 @@ describe('evaluate', () => {
 				literalExpr(5),
 				literalExpr(4)
 			)
-			const result = evaluate(expr)
+			const result = evaluate(env, expr)
 			expect(result).toEqual(5)
+		})
+	})
+	
+	describe(`variables`, () => {
+		it('gets a declared variable', () => {
+			env.define('x', 1)
+			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
+			const result = evaluate(env, expr)
+			expect(result).toEqual(1)	
+		})
+		
+		it('throws on an undefined variable', () => {
+			const expr = variableExpr(new Token('IDENTIFIER', 'x', null, 1))
+			expect(() => evaluate(env, expr)).toThrow()	
 		})
 	})
 })

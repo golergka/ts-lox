@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
+import { Environment } from './environment'
 import { interpret, InterpreterContext, RuntimeError } from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
@@ -10,6 +11,7 @@ class Context implements ParserContext, InterpreterContext {
 
 	private _hadError = false
 	private _hadRuntimeError = false
+	private readonly _environment: Environment = new Environment()
 	
 	public get hadError() {
 		return this._hadError
@@ -17,6 +19,10 @@ class Context implements ParserContext, InterpreterContext {
 	
 	public get hadRuntimeError() {
 		return this._hadRuntimeError
+	}
+	
+	public get environment() {
+		return this._environment
 	}
 
 	parserError(line: number, message: string): void
@@ -31,6 +37,11 @@ class Context implements ParserContext, InterpreterContext {
 	runtimeError(error: RuntimeError) {
 		console.log(error.message + `\n[line ${error.token.line}]`)
 		this._hadRuntimeError = true
+	}
+	
+	resetErrors() {
+		this._hadError = false
+		this._hadRuntimeError = false
 	}
 }
 
@@ -54,11 +65,12 @@ export async function runPrompt() {
 		})
 	}
 
+	const ctx = new Context()
 	while (true) {
 		const line = await question("> ")
 		if (line === null) break;
-		const ctx = new Context()
 		run(ctx, line)
+		ctx.resetErrors()
 	}
 }
 

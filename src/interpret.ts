@@ -1,6 +1,7 @@
 import { thrw } from 'thrw'
+import { Environment } from './environment'
 import { Expr } from './generated/Expr'
-import { Stmt } from './generated/Stmt'
+import { Stmt, varStmt } from './generated/Stmt'
 import { Token } from './Token'
 
 export class RuntimeError extends Error {
@@ -11,6 +12,7 @@ export class RuntimeError extends Error {
 
 export interface InterpreterContext {
 	runtimeError(error: RuntimeError): void
+	get environment(): Environment
 }
 
 function isTruthy(right: Object | null) {
@@ -31,16 +33,16 @@ function checkNumberOperand(
 	return true
 }
 
-export function evaluate(expr: Expr): Object | null {
+export function evaluate(env: Environment, expr: Expr): Object | null {
 	switch (expr.type) {
 		case 'literal':
 			return expr.value
 
 		case 'grouping':
-			return evaluate(expr.expression)
+			return evaluate(env, expr.expression)
 
 		case 'unary': {
-			const right = evaluate(expr.right)
+			const right = evaluate(env, expr.right)
 
 			if (checkNumberOperand(expr.operator, right)) {
 				switch (expr.operator.type) {
@@ -55,8 +57,8 @@ export function evaluate(expr: Expr): Object | null {
 		}
 
 		case 'binary': {
-			const left = evaluate(expr.left)
-			const right = evaluate(expr.right)
+			const left = evaluate(env, expr.left)
+			const right = evaluate(env, expr.right)
 
 			switch (expr.operator.type) {
 				case 'BANG_EQUAL':
@@ -101,10 +103,10 @@ export function evaluate(expr: Expr): Object | null {
 		}
 
 		case 'conditional': {
-			const condition = evaluate(expr.condition)
+			const condition = evaluate(env, expr.condition)
 			return isTruthy(condition)
-				? evaluate(expr.consequent)
-				: evaluate(expr.alternative)
+				? evaluate(env, expr.consequent)
+				: evaluate(env, expr.alternative)
 		}
         
         case 'binaryError': {
@@ -112,7 +114,7 @@ export function evaluate(expr: Expr): Object | null {
         }
 		
 		case 'variable': {
-			throw new RuntimeError(expr.name, `Variables not implemented yet`)
+			return env.get(expr.name)
 		}
 	}
 }
@@ -131,22 +133,30 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
-function execute(statement: Stmt) {
-	switch (statement.type) {
+function execute(env: Environment, stmt: Stmt): Object|null {
+	switch (stmt.type) {
 		case 'expression':
-			evaluate(statement.expression)
+			evaluate(env, stmt.expression)
 			return null
-		case 'print':
-			const value = evaluate(statement.expression)
+		case 'print': {
+			const value = evaluate(env, stmt.expression)
 			console.log(stringify(value))
 			return value
+		}
+		case 'var': {
+			const value = stmt.initializer !== null
+				? evaluate(env, stmt.initializer)
+				: null
+			env.define(stmt.name.lexeme, value)
+			return null
+		}
 	}
 }
 
 export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	try {
 		for (const statement of statements) {
-			execute(statement)
+			execute(ctx.environment, statement)
 		}
 	} catch (e) {
 		if (e instanceof RuntimeError) {
