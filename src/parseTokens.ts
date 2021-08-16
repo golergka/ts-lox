@@ -24,7 +24,7 @@ export interface ParserContext {
 	parserError(line: number, where: string, message: string): void
 }
 
-export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
+export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpressions: boolean): Stmt[]|Expr {
 	let current = 0
 
 	function peek() {
@@ -202,7 +202,7 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		const statements: Stmt[] = []
 
 		while (!check('RIGHT_BRACE') && !isAtEnd()) {
-			const stmt = declaration()
+			const stmt = declaration(false)
 			if (stmt !== null) {
 				statements.push(stmt)
 			}
@@ -213,16 +213,24 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		return statements
 	}
 
-	function expressionStatement() {
+	function expressionStatement(allowExpressions: boolean) {
 		const expr = expressionSeries()
-		consume('SEMICOLON', "Expect ';' after expression.")
-		return expressionStmt(expr)
+		if (match('SEMICOLON')) {
+			return expressionStmt(expr)
+		} else if (allowExpressions) {
+			return expr
+		} else {
+			throw error(peek(), "Expect ';' after expression.")
+		}
 	}
 
-	function statement(): Stmt {
+	function statement(allowExpressions: false): Stmt
+	function statement(allowExpressions: true): Stmt|Expr
+	function statement(allowExpressions: boolean): Stmt|Expr
+	function statement(allowExpressions: boolean): Stmt|Expr {
 		if (match('PRINT')) return printStatement()
 		if (match('LEFT_BRACE')) return blockStmt(blockStatement())
-		return expressionStatement()
+		return expressionStatement(allowExpressions)
 	}
 
 	function synchronize() {
@@ -254,9 +262,11 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 		return varStmt(name, initializer)
 	}
 
-	function declaration() {
+	function declaration(allowExpressions: false): Stmt|null
+	function declaration(allowExpressions: true): Stmt|Expr|null
+	function declaration(allowExpressions: boolean): Stmt|Expr|null {
 		try {
-			return match('VAR') ? variableDeclaration() : statement()
+			return match('VAR') ? variableDeclaration() : statement(allowExpressions)
 		} catch (e) {
 			if (e instanceof ParseError) {
 				synchronize()
@@ -268,8 +278,30 @@ export function parseTokens(ctx: ParserContext, tokens: Token[]): Stmt[] {
 
 	try {
 		const statements: Stmt[] = []
+		if (allowExpressions) {
+			const first = declaration(true)
+			switch(first?.type) {
+				// All possible statements
+				case 'block':
+				case 'expression':
+				case 'print':
+				case 'var':
+					statements.push(first)
+					break
+				// All possible expressions
+				case 'conditional':
+				case 'assignment':
+				case 'binary':
+				case 'binaryError':
+				case 'grouping':
+				case 'literal':
+				case 'unary':
+				case 'variable':
+					return first
+			}	
+		}
 		while (!isAtEnd()) {
-			const stmt = declaration()
+			const stmt = declaration(false)
 			if (stmt) {
 				statements.push(stmt)
 			}

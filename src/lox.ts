@@ -1,7 +1,9 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
 import { Environment } from './environment'
-import { interpret, InterpreterContext, RuntimeError } from './interpret'
+import { Expr } from './generated/Expr'
+import { Stmt } from './generated/Stmt'
+import { evaluate, interpret, InterpreterContext, RuntimeError } from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
 import { Token } from './Token'
@@ -76,9 +78,14 @@ export async function runPrompt() {
 
 function run(ctx: Context, source: string, filename?: string) {
 	const tokens = scan(ctx, source)
-	const expression = parseTokens(ctx, tokens)
+	const stmts = parseTokens(ctx, tokens, !filename)
 	
-	if (!expression || ctx.hadError) return
-	
-	interpret(ctx, expression)
+	if (!stmts || ctx.hadError) return
+		
+	if (Object.hasOwnProperty.call(stmts, "type")) {
+		const value = evaluate(ctx.environment, stmts as Expr)
+		console.log(value)
+	} else {
+		interpret(ctx, stmts as Stmt[])
+	}
 }
