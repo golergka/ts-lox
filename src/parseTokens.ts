@@ -20,6 +20,7 @@ import {
 	functionStmt,
 	ifStmt,
 	printStmt,
+	returnStmt,
 	Stmt,
 	varStmt,
 	whileStmt
@@ -291,6 +292,16 @@ export function parseTokens(
 		consume('SEMICOLON', "Expect ';' after value.")
 		return printStmt(value)
 	}
+	
+	function returnStatement(): Stmt {
+		const keyword = previous()
+		let value = null
+		if (!check('SEMICOLON')) {
+			value = expression()
+		}
+		consume('SEMICOLON', "Expect ';' after return value.")
+		return returnStmt(keyword, value)
+	}
 
 	function whileStatement() {
 		consume('LEFT_PAREN', "Expect '(' after 'while'.")
@@ -338,6 +349,7 @@ export function parseTokens(
 		if (match('FOR')) return forStatement()
 		if (match('IF')) return ifStatement(loopControls)
 		if (match('PRINT')) return printStatement()
+		if (match('RETURN')) return returnStatement()
 		if (match('WHILE')) return whileStatement()
 		if (match('LEFT_BRACE')) return blockStmt(blockStatement(loopControls))
 		return expressionStatement(expressions)
@@ -420,11 +432,16 @@ export function parseTokens(
 				// All possible statements
 				case 'block':
 				case 'expression':
-				case 'print':
-				case 'var':
-				case 'if':
-				case 'while':
 				case 'function':
+				case 'if':
+				case 'print':
+				case 'return':
+				case 'var':
+				case 'while':
+				case 'break':
+				case 'continue':
+				case 'breakError':
+				case 'continueError':
 					statements.push(first)
 					break
 				// All possible expressions
@@ -432,6 +449,7 @@ export function parseTokens(
 				case 'assignment':
 				case 'binary':
 				case 'binaryError':
+				case 'call':
 				case 'grouping':
 				case 'literal':
 				case 'unary':

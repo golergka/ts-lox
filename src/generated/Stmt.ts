@@ -83,6 +83,23 @@ export function printStmt(
     }
 }
 
+export interface ReturnStmt {
+    type: 'return'
+    keyword: Token
+    value: Expr|null
+}
+
+export function returnStmt(
+    keyword: Token,
+    value: Expr|null,
+): ReturnStmt {
+    return {
+        type: 'return',
+        keyword,
+        value,
+    }
+}
+
 export interface VarStmt {
     type: 'var'
     name: Token
@@ -179,6 +196,7 @@ export type Stmt =
     | FunctionStmt
     | IfStmt
     | PrintStmt
+    | ReturnStmt
     | VarStmt
     | WhileStmt
     | BreakStmt

@@ -34,6 +34,7 @@ defineAst(
 		'Function   : Token name, Token[] params, Stmt[] body',
 		'If         : Expr condition, Stmt consequent, Stmt|null alternative',
 		'Print      : Expr expression',
+		'Return     : Token keyword, Expr|null value',
 		'Var        : Token name, Expr|null|undefined initializer',
 		'While      : Expr condition, Stmt body',
 		'Break      : Token body',
