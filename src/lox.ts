@@ -1,19 +1,20 @@
 import * as fs from 'fs'
 import * as readline from 'readline'
+import { createGlobal } from './createGlobal'
 import { Environment } from './environment'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
 import { evaluate, interpret, InterpreterContext, RuntimeError } from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
-import { Token } from './token'
 
 
 class Context implements ParserContext, InterpreterContext {
 
 	private _hadError = false
 	private _hadRuntimeError = false
-	private readonly _environment: Environment = new Environment()
+
+	public environment: Environment = createGlobal()
 	
 	public get hadError() {
 		return this._hadError
@@ -21,10 +22,6 @@ class Context implements ParserContext, InterpreterContext {
 	
 	public get hadRuntimeError() {
 		return this._hadRuntimeError
-	}
-	
-	public get environment() {
-		return this._environment
 	}
 
 	parserError(line: number, message: string): void

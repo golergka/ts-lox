@@ -1,4 +1,3 @@
-import { thrw } from 'thrw'
 import { RuntimeError } from './interpret'
 import { Token } from './token'
 

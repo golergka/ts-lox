@@ -1,5 +1,6 @@
-import { instance, mock, spy, when } from 'ts-mockito'
+import { spy } from 'ts-mockito'
 import { Callable } from './callable'
+import { createGlobal } from './createGlobal'
 import { Environment } from './environment'
 import {
 	assignmentExpr,
@@ -38,7 +39,7 @@ class MockContext implements InterpreterContext {
 }
 
 beforeEach(() => {
-	env = new Environment()
+	env = new Environment(createGlobal())
 	ctx = new MockContext(env)
 	spyCtx = spy(ctx)
 })
