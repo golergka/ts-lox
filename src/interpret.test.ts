@@ -1,8 +1,10 @@
 import { instance, mock, spy, when } from 'ts-mockito'
+import { Callable } from './callable'
 import { Environment } from './environment'
 import {
 	assignmentExpr,
 	binaryExpr,
+	callExpr,
 	conditionalExpr,
 	groupingExpr,
 	literalExpr,
@@ -17,7 +19,12 @@ import {
 	varStmt,
 	whileStmt
 } from './generated/Stmt'
-import { evaluate, interpret, InterpreterContext, RuntimeError } from './interpret'
+import {
+	evaluate,
+	interpret,
+	InterpreterContext,
+	RuntimeError
+} from './interpret'
 import { Token } from './token'
 
 let env: Environment
@@ -27,8 +34,7 @@ let spyCtx: InterpreterContext
 class MockContext implements InterpreterContext {
 	public constructor(public environment: Environment) {}
 
-	runtimeError(error: RuntimeError): void {
-	}
+	runtimeError(error: RuntimeError): void {}
 }
 
 beforeEach(() => {
@@ -219,10 +225,35 @@ describe('evaluate', () => {
 			expect(() => evaluate(ctx, expr)).toThrow()
 		})
 	})
+	
+	describe('function calls', () => {
+		it('calls a function', () => {
+			const callable: Callable = {
+				call: () => {
+					return 2
+				}
+			}
+			const expr = callExpr(
+				literalExpr(callable),
+				new Token('LEFT_PAREN', '(', '(', 1),
+				[literalExpr(1)]
+			)
+			const result = evaluate(ctx, expr)
+			expect(result).toEqual(2)
+		})
+
+		it('throws on a null function call', () => {
+			const expr = callExpr(
+				literalExpr(null),
+				new Token('LEFT_PAREN', '(', '(', 1),
+				[literalExpr(1)]
+			)
+			expect(() => evaluate(ctx, expr)).toThrow()
+		})	
+	})
 })
 
 describe('intepret', () => {
-
 	describe('variables', () => {
 		it('defines variable with assignment', () => {
 			const stmts = [
@@ -334,4 +365,5 @@ describe('intepret', () => {
 			expect(env.get(new Token('IDENTIFIER', 'y', undefined, 1))).toEqual(false)
 		})
 	})
+
 })

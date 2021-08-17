@@ -3,7 +3,7 @@ import { Environment } from './environment'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
 import { Token } from './token'
-import { Callable } from './callable'
+import { Callable, isCallable } from './callable'
 
 export class RuntimeError extends Error {
 	constructor(public readonly token: Token, message: string) {
@@ -134,10 +134,14 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 		}
 		
 		case 'call': {
-			const callee = evaluate(ctx, expr.callee) as Callable
+			const callee = evaluate(ctx, expr.callee)
 			const args = expr.args.map(arg => evaluate(ctx, arg))
-			const result = callee.call(ctx, args)
-			return result
+			if (isCallable(callee)) {
+				const result = callee.call(ctx, args)
+				return result
+			} else {
+				throw new RuntimeError(expr.paren, 'Can only call functions and classes')
+			}
 		}
 	}
 }
