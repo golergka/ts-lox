@@ -1,7 +1,7 @@
 import { Callable } from './callable'
 import { Environment } from './environment'
 import { FunctionStmt } from './generated/Stmt'
-import { executeBlock, InterpreterContext } from './interpret'
+import { executeBlock, InterpreterContext, Return } from './interpret'
 
 export class LoxFunction implements Callable {
 	public constructor(private readonly declaration: FunctionStmt) {}
@@ -15,6 +15,12 @@ export class LoxFunction implements Callable {
         ctx.environment = environment
         try {
             executeBlock(ctx, this.declaration.body)
+        } catch (e) {
+            if (e instanceof Return) {
+                return e.value
+            } else {
+                throw e
+            }
         } finally {
             ctx.environment = prevEnvironment
         }

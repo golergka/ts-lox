@@ -19,6 +19,7 @@ import {
 	functionStmt,
 	ifStmt,
 	printStmt,
+	returnStmt,
 	varStmt,
 	whileStmt
 } from './generated/Stmt'
@@ -69,6 +70,36 @@ describe('evaluate', () => {
 			)
 			const result = evaluate(ctx, expr)
 			expect(result).toEqual(2)
+		})
+		
+		it('2-1', () => {
+			const expr = binaryExpr(
+				literalExpr(2),
+				new Token('MINUS', '-', null, 1),
+				literalExpr(1)
+			)
+			const result = evaluate(ctx, expr)
+			expect(result).toEqual(1)
+		})
+		
+		it('2*2', () => {
+			const expr = binaryExpr(
+				literalExpr(2),
+				new Token('STAR', '*', null, 1),
+				literalExpr(2)
+			)
+			const result = evaluate(ctx, expr)
+			expect(result).toEqual(4)	
+		})
+		
+		it('9/3', () => {
+			const expr = binaryExpr(
+				literalExpr(9),
+				new Token('SLASH', '/', null, 1),
+				literalExpr(3)
+			)
+			const result = evaluate(ctx, expr)
+			expect(result).toEqual(3)
 		})
 
 		it(`1+1+1`, () => {
@@ -273,6 +304,67 @@ describe('evaluate', () => {
 				[literalExpr(1)]
 			)
 			expect(() => evaluate(ctx, expr)).toThrow()
+		})
+
+		it('calculates fibonacci numbers', () => {
+			env.define(
+				new Token('IDENTIFIER', 'fib', undefined, 1),
+				new LoxFunction(
+					functionStmt(
+						new Token('IDENTIFIER', 'fib', undefined, 1),
+						[new Token('IDENTIFIER', 'n', undefined, 1)],
+						[
+							ifStmt(
+								binaryExpr(
+									variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
+									new Token('LESS_EQUAL', '<', null, 1),
+									literalExpr(1)
+								),
+								returnStmt(
+									new Token('RETURN', 'return', undefined, 1),
+									variableExpr(new Token('IDENTIFIER', 'n', undefined, 1))
+								),
+								null
+							),
+							returnStmt(
+								new Token('RETURN', 'return', undefined, 1),
+								binaryExpr(
+									callExpr(
+										variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+										new Token('LEFT_PAREN', '(', '(', 1),
+										[
+											binaryExpr(
+												variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
+												new Token('MINUS', '-', null, 1),
+												literalExpr(2)
+											)
+										]
+									),
+									new Token('PLUS', '+', null, 1),
+									callExpr(
+										variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+										new Token('LEFT_PAREN', '(', '(', 1),
+										[
+											binaryExpr(
+												variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
+												new Token('MINUS', '-', null, 1),
+												literalExpr(1)
+											)
+										]
+									)
+								)
+							)
+						]
+					)
+				)
+			)
+			const expr = callExpr(
+				variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+				new Token('LEFT_PAREN', '(', '(', 1),
+				[literalExpr(6)]
+			)
+			const result = evaluate(ctx, expr)
+			expect(result).toEqual(8)
 		})
 	})
 })

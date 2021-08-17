@@ -7,7 +7,7 @@ import { isCallable } from './callable'
 import { LoxFunction } from './loxFunction'
 
 export class RuntimeError extends Error {
-	constructor(public readonly token: Token, message: string) {
+	constructor(public readonly token?: Token, message?: string) {
 		super(message)
 	}
 }
@@ -96,10 +96,12 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 				checkNumberOperand(expr.operator, right)
 			) {
 				switch (expr.operator.type) {
+					case 'MINUS':
+						return left - right
 					case 'SLASH':
 						return left / right
 					case 'STAR':
-						return left / right
+						return left * right
 					case 'GREATER':
 						return left > right
 					case 'GREATER_EQUAL':
@@ -111,7 +113,7 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 				}
 			}
 
-			throw new RuntimeError(expr.operator, 'Binary matching exhausted')
+			throw new RuntimeError(expr.operator, `Binary matching exhausted, unknown operator: ${expr.operator.lexeme}`)
 		}
 
 		case 'conditional': {
@@ -176,9 +178,15 @@ export function executeBlock(ctx: InterpreterContext, stmts: Stmt[]): void {
 	}
 }
 
-class Break extends Error {}
+class Break extends RuntimeError {}
 
-class Continue extends Error {}
+class Continue extends RuntimeError {}
+
+export class Return extends RuntimeError {
+	public constructor(public readonly value: Object | null) {
+		super()
+	 }
+}
 
 function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 	switch (stmt.type) {
@@ -236,6 +244,12 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			const func = new LoxFunction(stmt)
 			ctx.environment.define(stmt.name, func)
 			return null
+		}
+		case 'return': {
+			const value = stmt.value !== null
+				? evaluate(ctx, stmt.value)
+				: null
+			throw new Return(value)
 		}
 		case 'break': {
 			throw new Break()

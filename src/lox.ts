@@ -4,27 +4,30 @@ import { createGlobal } from './createGlobal'
 import { Environment } from './environment'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
-import { evaluate, interpret, InterpreterContext, RuntimeError } from './interpret'
+import {
+	evaluate,
+	interpret,
+	InterpreterContext,
+	RuntimeError
+} from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
 
-
 class Context implements ParserContext, InterpreterContext {
-
 	private _hadError = false
 	private _hadRuntimeError = false
 
 	public environment: Environment
 	public readonly globals: Environment
-	
+
 	public constructor() {
 		this.environment = this.globals = createGlobal()
 	}
-	
+
 	public get hadError() {
 		return this._hadError
 	}
-	
+
 	public get hadRuntimeError() {
 		return this._hadRuntimeError
 	}
@@ -39,10 +42,12 @@ class Context implements ParserContext, InterpreterContext {
 	}
 
 	runtimeError(error: RuntimeError) {
-		console.log(error.message + `\n[line ${error.token.line}]`)
+		console.log(
+			error.message + (!!error.token ? `\n[line ${error.token.line}]` : '')
+		)
 		this._hadRuntimeError = true
 	}
-	
+
 	resetErrors() {
 		this._hadError = false
 		this._hadRuntimeError = false
@@ -51,7 +56,7 @@ class Context implements ParserContext, InterpreterContext {
 
 export function runFile(filename: string) {
 	const ctx = new Context()
-	const code = fs.readFileSync(filename, "utf8")
+	const code = fs.readFileSync(filename, 'utf8')
 	run(ctx, code, filename)
 	if (ctx.hadError) process.exit(65)
 	if (ctx.hadRuntimeError) process.exit(70)
@@ -60,19 +65,19 @@ export function runFile(filename: string) {
 export async function runPrompt() {
 	const rl = readline.createInterface({
 		input: process.stdin,
-		output: process.stdout,
+		output: process.stdout
 	})
 
 	async function question(query: string): Promise<string> {
 		return new Promise((resolve) => {
-			rl.question(query, resolve)	
+			rl.question(query, resolve)
 		})
 	}
 
 	const ctx = new Context()
 	while (true) {
-		const line = await question("> ")
-		if (line === null) break;
+		const line = await question('> ')
+		if (line === null) break
 		run(ctx, line)
 		ctx.resetErrors()
 	}
@@ -81,10 +86,10 @@ export async function runPrompt() {
 function run(ctx: Context, source: string, filename?: string) {
 	const tokens = scan(ctx, source)
 	const stmts = parseTokens(ctx, tokens, !filename)
-	
+
 	if (!stmts || ctx.hadError) return
-		
-	if (Object.hasOwnProperty.call(stmts, "type")) {
+
+	if (Object.hasOwnProperty.call(stmts, 'type')) {
 		const value = evaluate(ctx, stmts as Expr)
 		console.log(value)
 	} else {
