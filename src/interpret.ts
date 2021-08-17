@@ -118,29 +118,37 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 				? evaluate(ctx, expr.consequent)
 				: evaluate(ctx, expr.alternative)
 		}
-        
-        case 'binaryError': {
-            throw new RuntimeError(expr.operator, `Compilation error`)
-        }
-		
+
+		case 'binaryError': {
+			throw new RuntimeError(expr.operator, `Compilation error`)
+		}
+
 		case 'variable': {
 			return ctx.environment.get(expr.name)
 		}
-		
+
 		case 'assignment': {
 			const value = evaluate(ctx, expr.value)
 			ctx.environment.assign(expr.name, value)
 			return value
 		}
-		
+
 		case 'call': {
 			const callee = evaluate(ctx, expr.callee)
-			const args = expr.args.map(arg => evaluate(ctx, arg))
-			if (isCallable(callee)) {
+			const args = expr.args.map((arg) => evaluate(ctx, arg))
+			if (!isCallable(callee)) {
+				throw new RuntimeError(
+					expr.paren,
+					'Can only call functions and classes'
+				)
+			} else if (args.length !== callee.arity) {
+				throw new RuntimeError(
+					expr.paren,
+					`Expected ${callee.arity} arguments, but ${args.length} were provided`
+				)
+			} else {
 				const result = callee.call(ctx, args)
 				return result
-			} else {
-				throw new RuntimeError(expr.paren, 'Can only call functions and classes')
 			}
 		}
 	}
@@ -166,11 +174,11 @@ function executeBlock(ctx: InterpreterContext, stmts: Stmt[]): void {
 	}
 }
 
-class Break extends Error { }
+class Break extends Error {}
 
-class Continue extends Error { }
+class Continue extends Error {}
 
-function execute(ctx: InterpreterContext, stmt: Stmt): Object|null {
+function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 	switch (stmt.type) {
 		case 'expression': {
 			evaluate(ctx, stmt.expression)

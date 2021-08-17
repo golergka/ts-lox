@@ -231,12 +231,13 @@ describe('evaluate', () => {
 			const callable: Callable = {
 				call: () => {
 					return 2
-				}
+				},
+				arity: 0
 			}
 			const expr = callExpr(
 				literalExpr(callable),
 				new Token('LEFT_PAREN', '(', '(', 1),
-				[literalExpr(1)]
+				[]
 			)
 			const result = evaluate(ctx, expr)
 			expect(result).toEqual(2)
@@ -249,7 +250,22 @@ describe('evaluate', () => {
 				[literalExpr(1)]
 			)
 			expect(() => evaluate(ctx, expr)).toThrow()
-		})	
+		})
+
+		it('throws on wrong arity of a function call', () => {
+			const callable: Callable = {
+				call: () => {
+					return 2
+				},
+				arity: 0
+			}
+			const expr = callExpr(
+				literalExpr(callable),
+				new Token('LEFT_PAREN', '(', '(', 1),
+				[literalExpr(1)]
+			)
+			expect(() => evaluate(ctx, expr)).toThrow()	
+		})
 	})
 })
 
