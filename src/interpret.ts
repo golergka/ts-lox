@@ -1,7 +1,7 @@
 import { thrw } from 'thrw'
 import { Environment } from './environment'
 import { Expr } from './generated/Expr'
-import { Stmt, varStmt } from './generated/Stmt'
+import { Stmt } from './generated/Stmt'
 import { Token } from './Token'
 
 export class RuntimeError extends Error {
@@ -154,6 +154,10 @@ function executeBlock(env: Environment, stmts: Stmt[]): void {
 	}
 }
 
+class Break extends Error { }
+
+class Continue extends Error { }
+
 function execute(env: Environment, stmt: Stmt): Object|null {
 	switch (stmt.type) {
 		case 'expression': {
@@ -186,9 +190,29 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 		}
 		case 'while': {
 			while (isTruthy(evaluate(env, stmt.condition))) {
-				execute(env, stmt.body)
+				try {
+					execute(env, stmt.body)
+				} catch (e) {
+					if (e instanceof Continue) {
+						continue
+					} else if (e instanceof Break) {
+						break
+					} else {
+						throw e
+					}
+				}
 			}
 			return null
+		}
+		case 'break': {
+			throw new Break()
+		}
+		case 'continue': {
+			throw new Continue()
+		}
+		case 'breakError':
+		case 'continueError': {
+			throw new RuntimeError(stmt.body, `Compilation error`)
 		}
 	}
 }

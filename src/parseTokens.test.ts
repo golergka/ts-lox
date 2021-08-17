@@ -9,7 +9,12 @@ import {
 } from './generated/Expr'
 import {
 	blockStmt,
+	breakErrorStmt,
+	breakStmt,
+	continueErrorStmt,
+	continueStmt,
 	expressionStmt,
+	ifStmt,
 	printStmt,
 	varStmt,
 	whileStmt
@@ -325,6 +330,96 @@ describe(`parseTokens`, () => {
 					)
 				])
 			])
+		})
+
+		it('while(true) { break; }', () => {
+			const tokens: Token[] = [
+				new Token('WHILE', 'while', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('TRUE', 'true', true, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('BREAK', 'break', undefined, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				whileStmt(
+					literalExpr(true),
+					blockStmt([breakStmt(new Token('BREAK', 'break', undefined, 1))])
+				)
+			])
+		})
+
+		it('while(true) { continue; }', () => {
+			const tokens: Token[] = [
+				new Token('WHILE', 'while', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('TRUE', 'true', true, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('CONTINUE', 'continue', undefined, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				whileStmt(
+					literalExpr(true),
+					blockStmt([
+						continueStmt(new Token('CONTINUE', 'continue', undefined, 1))
+					])
+				)
+			])
+		})
+
+		it('break;', () => {
+			const tokens: Token[] = [
+				new Token('BREAK', 'break', 'break', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				breakErrorStmt(new Token('BREAK', 'break', 'break', 1))
+			])
+			verify(
+				mockedCtx.parserError(anything(), anything(), 'Invalid break statement')
+			).once()
+		})
+
+		it('if (true) { continue; }', () => {
+			const tokens: Token[] = [
+				new Token('IF', 'if', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('TRUE', 'true', true, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('CONTINUE', 'continue', undefined, 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				ifStmt(
+					literalExpr(true),
+					blockStmt([
+						continueErrorStmt(new Token('CONTINUE', 'continue', undefined, 1))
+					]),
+					null
+				)
+			])
+			verify(
+				mockedCtx.parserError(
+					anything(),
+					anything(),
+					'Invalid continue statement'
+				)
+			).once()
 		})
 	})
 

@@ -34,6 +34,10 @@ defineAst(
 		'Print      : Expr expression',
 		'Var        : Token name, Expr|null|undefined initializer',
 		'While      : Expr condition, Stmt body',
+		'Break      : Token body',
+		'Continue   : Token body',
+		'BreakError : Token body',
+		'ContinueError : Token body'
 	],
 	[
 		[['Expr'], './Expr'],
@@ -54,6 +58,8 @@ async function defineAst(
 		const fields: [type: string, name: string][] = rawFieldList
 			.trim()
 			.split(', ')
+			.map(rawField => rawField.trim())
+			.filter(rawField => rawField.length > 0)
 			.map((rawField) => {
 				const [type, name] = rawField.split(' ')
 				return [type, name]

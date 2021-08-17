@@ -11,6 +11,10 @@ import {
 } from './generated/Expr'
 import {
 	blockStmt,
+	breakErrorStmt,
+	breakStmt,
+	continueErrorStmt,
+	continueStmt,
 	ExpressionStmt,
 	expressionStmt,
 	ifStmt,
@@ -27,7 +31,11 @@ export interface ParserContext {
 	parserError(line: number, where: string, message: string): void
 }
 
-export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpressions: boolean): Stmt[]|Expr {
+export function parseTokens(
+	ctx: ParserContext,
+	tokens: Token[],
+	expressions: boolean
+): Stmt[] | Expr {
 	let current = 0
 
 	function peek() {
@@ -199,6 +207,28 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	const expressionSeries = makeBinary(binaryError, 'COMMA')
 
+	function breakStatement(loopControls: boolean) {
+		const brk = previous()
+		consume('SEMICOLON', "Expect ';' after 'break'")
+		if (loopControls) {
+			return breakStmt(brk)
+		} else {
+			error(brk, 'Invalid break statement')
+			return breakErrorStmt(brk)
+		}
+	}
+
+	function continueStatement(loopControls: boolean) {
+		const cont = previous()
+		consume('SEMICOLON', "Expect ';' after 'continue'")
+		if (loopControls) {
+			return continueStmt(cont)
+		} else {
+			error(cont, 'Invalid continue statement')
+			return continueErrorStmt(cont)
+		}
+	}
+
 	function forStatement(): Stmt {
 		consume('LEFT_PAREN', "Expect '(' after 'for'.")
 		const initializer = match('SEMICOLON')
@@ -206,15 +236,11 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 			: match('VAR')
 			? variableDeclaration()
 			: expressionStatement(false)
-		const condition = check('SEMICOLON')
-			? literalExpr(true)
-			: expression()
+		const condition = check('SEMICOLON') ? literalExpr(true) : expression()
 		consume('SEMICOLON', "Expect ';' after loop condition.")
-		const increment = check('RIGHT_PAREN')
-			? null
-			: expression()
+		const increment = check('RIGHT_PAREN') ? null : expression()
 		consume('RIGHT_PAREN', "Expect ')' after loop increment.")
-		let body = statement(false)
+		let body = statement(false, true)
 		if (increment) {
 			body = blockStmt([body, expressionStmt(increment)])
 		}
@@ -225,14 +251,12 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		return body
 	}
 
-	function ifStatement() {
+	function ifStatement(loopControls: boolean) {
 		consume('LEFT_PAREN', "Expect '(' after 'if'.")
 		const condition = expression()
 		consume('RIGHT_PAREN', "Expect ')' after condition.")
-		const consequent = statement(false)
-		const alternative = match('ELSE')
-			? statement(false)
-			: null
+		const consequent = statement(false, loopControls)
+		const alternative = match('ELSE') ? statement(false, loopControls) : null
 		return ifStmt(condition, consequent, alternative)
 	}
 
@@ -246,15 +270,15 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		consume('LEFT_PAREN', "Expect '(' after 'while'.")
 		const condition = expression()
 		consume('RIGHT_PAREN', "Expect ')' after condition.")
-		const body = statement(false)
+		const body = statement(false, true)
 		return whileStmt(condition, body)
 	}
 
-	function blockStatement(): Stmt[] {
+	function blockStatement(loopControls: boolean): Stmt[] {
 		const statements: Stmt[] = []
 
 		while (!check('RIGHT_BRACE') && !isAtEnd()) {
-			const stmt = declaration(false)
+			const stmt = declaration(false, loopControls)
 			if (stmt !== null) {
 				statements.push(stmt)
 			}
@@ -265,30 +289,32 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		return statements
 	}
 
-	function expressionStatement(allowExpressions: false): Stmt
-	function expressionStatement(allowExpressions: true): Stmt|Expr
-	function expressionStatement(allowExpressions: boolean): Stmt|Expr
-	function expressionStatement(allowExpressions: boolean): Stmt|Expr {
+	function expressionStatement(expressions: false): Stmt
+	function expressionStatement(expressions: true): Stmt | Expr
+	function expressionStatement(expressions: boolean): Stmt | Expr
+	function expressionStatement(expressions: boolean): Stmt | Expr {
 		const expr = expressionSeries()
 		if (match('SEMICOLON')) {
 			return expressionStmt(expr)
-		} else if (allowExpressions) {
+		} else if (expressions) {
 			return expr
 		} else {
 			throw error(peek(), "Expect ';' after expression.")
 		}
 	}
 
-	function statement(allowExpressions: false): Stmt
-	function statement(allowExpressions: true): Stmt|Expr
-	function statement(allowExpressions: boolean): Stmt|Expr
-	function statement(allowExpressions: boolean): Stmt|Expr {
+	function statement(expressions: false, loopControls: boolean): Stmt
+	function statement(expressions: true, loopControls: boolean): Stmt | Expr
+	function statement(expressions: boolean, loopControls: boolean): Stmt | Expr
+	function statement(expressions: boolean, loopControls: boolean): Stmt | Expr {
+		if (match('BREAK')) return breakStatement(loopControls)
+		if (match('CONTINUE')) return continueStatement(loopControls)
 		if (match('FOR')) return forStatement()
-		if (match('IF')) return ifStatement()
+		if (match('IF')) return ifStatement(loopControls)
 		if (match('PRINT')) return printStatement()
 		if (match('WHILE')) return whileStatement()
-		if (match('LEFT_BRACE')) return blockStmt(blockStatement())
-		return expressionStatement(allowExpressions)
+		if (match('LEFT_BRACE')) return blockStmt(blockStatement(loopControls))
+		return expressionStatement(expressions)
 	}
 
 	function synchronize() {
@@ -320,11 +346,19 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 		return varStmt(name, initializer)
 	}
 
-	function declaration(allowExpressions: false): Stmt|null
-	function declaration(allowExpressions: true): Stmt|Expr|null
-	function declaration(allowExpressions: boolean): Stmt|Expr|null {
+	function declaration(expressions: false, loopControls: boolean): Stmt | null
+	function declaration(
+		expressions: true,
+		loopControls: boolean
+	): Stmt | Expr | null
+	function declaration(
+		expressions: boolean,
+		loopControls: boolean
+	): Stmt | Expr | null {
 		try {
-			return match('VAR') ? variableDeclaration() : statement(allowExpressions)
+			return match('VAR')
+				? variableDeclaration()
+				: statement(expressions, loopControls)
 		} catch (e) {
 			if (e instanceof ParseError) {
 				synchronize()
@@ -336,9 +370,9 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 
 	try {
 		const statements: Stmt[] = []
-		if (allowExpressions) {
-			const first = declaration(true)
-			switch(first?.type) {
+		if (expressions) {
+			const first = declaration(true, false)
+			switch (first?.type) {
 				// All possible statements
 				case 'block':
 				case 'expression':
@@ -358,10 +392,10 @@ export function parseTokens(ctx: ParserContext, tokens: Token[], allowExpression
 				case 'unary':
 				case 'variable':
 					return first
-			}	
+			}
 		}
 		while (!isAtEnd()) {
-			const stmt = declaration(false)
+			const stmt = declaration(false, false)
 			if (stmt) {
 				statements.push(stmt)
 			}

@@ -97,6 +97,62 @@ export function whileStmt(
     }
 }
 
+export interface BreakStmt {
+    type: 'break'
+    body: Token
+}
+
+export function breakStmt(
+    body: Token,
+): BreakStmt {
+    return {
+        type: 'break',
+        body,
+    }
+}
+
+export interface ContinueStmt {
+    type: 'continue'
+    body: Token
+}
+
+export function continueStmt(
+    body: Token,
+): ContinueStmt {
+    return {
+        type: 'continue',
+        body,
+    }
+}
+
+export interface BreakErrorStmt {
+    type: 'breakError'
+    body: Token
+}
+
+export function breakErrorStmt(
+    body: Token,
+): BreakErrorStmt {
+    return {
+        type: 'breakError',
+        body,
+    }
+}
+
+export interface ContinueErrorStmt {
+    type: 'continueError'
+    body: Token
+}
+
+export function continueErrorStmt(
+    body: Token,
+): ContinueErrorStmt {
+    return {
+        type: 'continueError',
+        body,
+    }
+}
+
 export type Stmt =
     | BlockStmt
     | ExpressionStmt
@@ -104,4 +160,8 @@ export type Stmt =
     | PrintStmt
     | VarStmt
     | WhileStmt
+    | BreakStmt
+    | ContinueStmt
+    | BreakErrorStmt
+    | ContinueErrorStmt
 

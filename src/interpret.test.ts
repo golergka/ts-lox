@@ -8,7 +8,15 @@ import {
 	literalExpr,
 	variableExpr
 } from './generated/Expr'
-import { expressionStmt, ifStmt, varStmt, whileStmt } from './generated/Stmt'
+import {
+	blockStmt,
+	breakStmt,
+	continueStmt,
+	expressionStmt,
+	ifStmt,
+	varStmt,
+	whileStmt
+} from './generated/Stmt'
 import { evaluate, interpret, InterpreterContext } from './interpret'
 import { Token } from './Token'
 
@@ -259,7 +267,7 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(1)
 		})
-		
+
 		it('runs a while block', () => {
 			env.define(new Token('IDENTIFIER', 'x', undefined, 1), true)
 			const stmts = [
@@ -275,6 +283,52 @@ describe('intepret', () => {
 			]
 			interpret(ctx, stmts)
 			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(false)
+		})
+
+		it('breaks a while block', () => {
+			const stmts = [
+				whileStmt(
+					literalExpr(true),
+					breakStmt(new Token('BREAK', 'break', 'break', 1))
+				)
+			]
+			interpret(ctx, stmts)
+		})
+
+		it('continues a while block', () => {
+			env.define(new Token('IDENTIFIER', 'x', undefined, 1), 0)
+			env.define(new Token('IDENTIFIER', 'y', undefined, 1), false)
+			const stmts = [
+				whileStmt(
+					binaryExpr(
+						variableExpr(new Token('IDENTIFIER', 'x', undefined, 1)),
+						new Token('LESS', '<', '<', 1),
+						literalExpr(10)
+					),
+					blockStmt([
+						expressionStmt(
+							assignmentExpr(
+								new Token('IDENTIFIER', 'x', undefined, 1),
+								binaryExpr(
+									variableExpr(new Token('IDENTIFIER', 'x', undefined, 1)),
+									new Token('PLUS', '+', '+', 1),
+									literalExpr(1)
+								)
+							)
+						),
+						continueStmt(new Token('CONTINUE', 'continue', 'continue', 1)),
+						expressionStmt(
+							assignmentExpr(
+								new Token('IDENTIFIER', 'y', undefined, 1),
+								literalExpr(true)
+							)
+						)
+					])
+				)
+			]
+			interpret(ctx, stmts)
+			expect(env.get(new Token('IDENTIFIER', 'x', undefined, 1))).toEqual(10)
+			expect(env.get(new Token('IDENTIFIER', 'y', undefined, 1))).toEqual(false)
 		})
 	})
 })

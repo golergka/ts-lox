@@ -44,6 +44,8 @@ export type TokenType =
 	| 'VAR'
 	| 'WHILE'
 	| 'EOF'
+	| 'BREAK'
+	| 'CONTINUE'
 
 export const keywords: { [index: string]: TokenType } = {
 	and: 'AND',
@@ -61,5 +63,7 @@ export const keywords: { [index: string]: TokenType } = {
     this: 'THIS',
     true: 'TRUE',
     var: 'VAR',
-    while: 'WHILE'
+    while: 'WHILE',
+	break: 'BREAK',
+	continue: 'CONTINUE'
 }

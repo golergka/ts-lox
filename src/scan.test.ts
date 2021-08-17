@@ -98,4 +98,13 @@ describe('Scanner', () => {
 			])	
 		})
 	})
+	
+	it('break;', () => {
+		const tokens = scan(ctx, 'break;')
+		expect(tokens).toEqual([
+			new Token('BREAK', 'break', 'break', 1),
+			new Token('SEMICOLON', ';', undefined, 1),
+			new Token('EOF', '', undefined, 1)
+		])	
+	})
 })
