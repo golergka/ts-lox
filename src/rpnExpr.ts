@@ -1,4 +1,4 @@
-import { Expr } from './generated/Expr'
+import { callExpr, Expr } from './generated/Expr'
 
 export function rpnExpr(expr: Expr): string {
 	switch (expr.type) {
@@ -30,6 +30,12 @@ export function rpnExpr(expr: Expr): string {
 				rpnExpr(expr.value),
 				expr.name,
 				'='
+			].join(' ')
+		case 'call':
+			return [
+				...expr.args.map(rpnExpr),
+				rpnExpr(expr.callee),
+				'call'
 			].join(' ')
 	}
 }

@@ -74,6 +74,26 @@ export function binaryErrorExpr(
     }
 }
 
+export interface CallExpr {
+    type: 'call'
+    callee: Expr
+    paren: Token
+    args: Expr[]
+}
+
+export function callExpr(
+    callee: Expr,
+    paren: Token,
+    args: Expr[],
+): CallExpr {
+    return {
+        type: 'call',
+        callee,
+        paren,
+        args,
+    }
+}
+
 export interface GroupingExpr {
     type: 'grouping'
     expression: Expr
@@ -138,6 +158,7 @@ export type Expr =
     | AssignmentExpr
     | BinaryExpr
     | BinaryErrorExpr
+    | CallExpr
     | GroupingExpr
     | LiteralExpr
     | UnaryExpr

@@ -7,7 +7,8 @@ import {
 	groupingExpr,
 	literalExpr,
 	unaryExpr,
-	variableExpr
+	variableExpr,
+	callExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -15,7 +16,6 @@ import {
 	breakStmt,
 	continueErrorStmt,
 	continueStmt,
-	ExpressionStmt,
 	expressionStmt,
 	ifStmt,
 	printStmt,
@@ -102,13 +102,38 @@ export function parseTokens(
 		throw error(peek(), 'Expect expression.')
 	}
 
+	function finishCall(expr: Expr): Expr {
+		const args = []
+		if (!check('RIGHT_PAREN')) {
+			do {
+				if (args.length >= 255) {
+					error(peek(), "Can't have more than 255 arguments.")
+				}
+				args.push(expression())
+			} while (match('COMMA'))
+		}
+		
+		const paren = consume('RIGHT_PAREN', 'Expect ")" after arguments.')
+		return callExpr(expr, paren, args)
+	}
+
+	function call(): Expr {
+		let expr = primary()
+
+		while (match('LEFT_PAREN')) {
+			expr = finishCall(expr)
+		}
+		
+		return expr
+	}
+
 	function unary(): Expr {
 		if (match('BANG', 'MINUS')) {
 			const operator = previous()
 			const right = unary()
 			return unaryExpr(operator, right)
 		}
-		return primary()
+		return call()
 	}
 
 	/**

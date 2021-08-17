@@ -24,6 +24,8 @@ export function printExpr(expr: Expr): string {
 			return expr.name.lexeme
 		case 'assignment':
 			return parenthesize(expr.name.lexeme, expr.value)
+		case 'call':
+			return parenthesize('call', expr.callee, ...expr.args)
 	}
 }
 

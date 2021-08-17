@@ -16,6 +16,7 @@ defineAst(
 		'Assignment  : Token name, Expr value',
 		'Binary      : Expr left, Token operator, Expr right',
 		'BinaryError : Token operator, Expr right',
+		'Call        : Expr callee, Token paren, Expr[] args',
 		'Grouping    : Expr expression',
 		'Literal     : Object|null value',
 		'Unary       : Token operator, Expr right',
