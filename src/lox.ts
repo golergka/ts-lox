@@ -6,7 +6,7 @@ import { Stmt } from './generated/Stmt'
 import { evaluate, interpret, InterpreterContext, RuntimeError } from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
-import { Token } from './Token'
+import { Token } from './token'
 
 
 class Context implements ParserContext, InterpreterContext {
@@ -83,7 +83,7 @@ function run(ctx: Context, source: string, filename?: string) {
 	if (!stmts || ctx.hadError) return
 		
 	if (Object.hasOwnProperty.call(stmts, "type")) {
-		const value = evaluate(ctx.environment, stmts as Expr)
+		const value = evaluate(ctx, stmts as Expr)
 		console.log(value)
 	} else {
 		interpret(ctx, stmts as Stmt[])

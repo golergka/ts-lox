@@ -1,6 +1,6 @@
 import { binaryExpr, literalExpr, variableExpr } from './generated/Expr'
 import { rpnExpr } from './rpnExpr'
-import { Token } from './Token'
+import { Token } from './token'
 
 describe('rpnExpr', () => {
 	it('prints the textbook example', () => {

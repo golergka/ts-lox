@@ -20,7 +20,7 @@ import {
 	whileStmt
 } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
-import { Token } from './Token'
+import { Token } from './token'
 import { mock, instance, verify, anything } from 'ts-mockito'
 
 describe(`parseTokens`, () => {

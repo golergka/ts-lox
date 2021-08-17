@@ -1,6 +1,6 @@
 import { thrw } from 'thrw'
 import { RuntimeError } from './interpret'
-import { Token } from './Token'
+import { Token } from './token'
 
 export class Environment {
 	private readonly values: Map<string, Object | null | undefined> = new Map<

@@ -1,5 +1,5 @@
 import { Environment } from './environment'
-import { Token } from './Token'
+import { Token } from './token'
 
 describe('environment', () => {
 	let env: Environment

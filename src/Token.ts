@@ -1,4 +1,4 @@
-import { TokenType } from "./TokenType";
+import { TokenType } from "./tokenType";
 
 export class Token {
     public constructor(

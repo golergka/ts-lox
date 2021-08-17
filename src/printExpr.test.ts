@@ -7,7 +7,7 @@ import {
 	variableExpr
 } from './generated/Expr'
 import { printExpr } from './printExpr'
-import { Token } from './Token'
+import { Token } from './token'
 
 describe(`printExpr`, () => {
 	it(`handles textbook example`, () => {

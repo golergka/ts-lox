@@ -2,7 +2,8 @@ import { thrw } from 'thrw'
 import { Environment } from './environment'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
-import { Token } from './Token'
+import { Token } from './token'
+import { Callable } from './callable'
 
 export class RuntimeError extends Error {
 	constructor(public readonly token: Token, message: string) {
@@ -12,7 +13,7 @@ export class RuntimeError extends Error {
 
 export interface InterpreterContext {
 	runtimeError(error: RuntimeError): void
-	get environment(): Environment
+	environment: Environment
 }
 
 function isTruthy(right: Object | null) {
@@ -33,16 +34,16 @@ function checkNumberOperand(
 	return true
 }
 
-export function evaluate(env: Environment, expr: Expr): Object | null {
+export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 	switch (expr.type) {
 		case 'literal':
 			return expr.value
 
 		case 'grouping':
-			return evaluate(env, expr.expression)
+			return evaluate(ctx, expr.expression)
 
 		case 'unary': {
-			const right = evaluate(env, expr.right)
+			const right = evaluate(ctx, expr.right)
 
 			if (checkNumberOperand(expr.operator, right)) {
 				switch (expr.operator.type) {
@@ -57,17 +58,17 @@ export function evaluate(env: Environment, expr: Expr): Object | null {
 		}
 
 		case 'binary': {
-			const left = evaluate(env, expr.left)
+			const left = evaluate(ctx, expr.left)
 
 			// Logical operators short-circuit
 			switch (expr.operator.type) {
 				case 'OR':
-					return isTruthy(left) ? left : evaluate(env, expr.right)
+					return isTruthy(left) ? left : evaluate(ctx, expr.right)
 				case 'AND':
-					return isTruthy(left) ? evaluate(env, expr.right) : left
+					return isTruthy(left) ? evaluate(ctx, expr.right) : left
 			}
 
-			const right = evaluate(env, expr.right)
+			const right = evaluate(ctx, expr.right)
 
 			switch (expr.operator.type) {
 				case 'BANG_EQUAL':
@@ -112,10 +113,10 @@ export function evaluate(env: Environment, expr: Expr): Object | null {
 		}
 
 		case 'conditional': {
-			const condition = evaluate(env, expr.condition)
+			const condition = evaluate(ctx, expr.condition)
 			return isTruthy(condition)
-				? evaluate(env, expr.consequent)
-				: evaluate(env, expr.alternative)
+				? evaluate(ctx, expr.consequent)
+				: evaluate(ctx, expr.alternative)
 		}
         
         case 'binaryError': {
@@ -123,13 +124,20 @@ export function evaluate(env: Environment, expr: Expr): Object | null {
         }
 		
 		case 'variable': {
-			return env.get(expr.name)
+			return ctx.environment.get(expr.name)
 		}
 		
 		case 'assignment': {
-			const value = evaluate(env, expr.value)
-			env.assign(expr.name, value)
+			const value = evaluate(ctx, expr.value)
+			ctx.environment.assign(expr.name, value)
 			return value
+		}
+		
+		case 'call': {
+			const callee = evaluate(ctx, expr.callee) as Callable
+			const args = expr.args.map(arg => evaluate(ctx, arg))
+			const result = callee.call(ctx, args)
+			return result
 		}
 	}
 }
@@ -148,9 +156,9 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
-function executeBlock(env: Environment, stmts: Stmt[]): void {
+function executeBlock(ctx: InterpreterContext, stmts: Stmt[]): void {
 	for (const stmt of stmts) {
-		execute(env, stmt)
+		execute(ctx, stmt)
 	}
 }
 
@@ -158,40 +166,46 @@ class Break extends Error { }
 
 class Continue extends Error { }
 
-function execute(env: Environment, stmt: Stmt): Object|null {
+function execute(ctx: InterpreterContext, stmt: Stmt): Object|null {
 	switch (stmt.type) {
 		case 'expression': {
-			evaluate(env, stmt.expression)
+			evaluate(ctx, stmt.expression)
 			return null
 		}
 		case 'print': {
-			const value = evaluate(env, stmt.expression)
+			const value = evaluate(ctx, stmt.expression)
 			console.log(stringify(value))
 			return value
 		}
 		case 'var': {
 			const value = stmt.initializer
-				? evaluate(env, stmt.initializer)
+				? evaluate(ctx, stmt.initializer)
 				: stmt.initializer
-			env.define(stmt.name, value)
+			ctx.environment.define(stmt.name, value)
 			return null
 		}
 		case 'block': {
-			executeBlock(new Environment(env), stmt.statements)
+			const enclosing = ctx.environment
+			ctx.environment = new Environment(enclosing)
+			try {
+				executeBlock(ctx, stmt.statements)
+			} finally {
+				ctx.environment = enclosing
+			}
 			return null
 		}
 		case 'if': {
-			if (isTruthy(evaluate(env, stmt.condition))) {
-				execute(env, stmt.consequent)
+			if (isTruthy(evaluate(ctx, stmt.condition))) {
+				execute(ctx, stmt.consequent)
 			} else if (stmt.alternative) {
-				execute(env, stmt.alternative)
+				execute(ctx, stmt.alternative)
 			}
 			return null
 		}
 		case 'while': {
-			while (isTruthy(evaluate(env, stmt.condition))) {
+			while (isTruthy(evaluate(ctx, stmt.condition))) {
 				try {
-					execute(env, stmt.body)
+					execute(ctx, stmt.body)
 				} catch (e) {
 					if (e instanceof Continue) {
 						continue
@@ -219,7 +233,7 @@ function execute(env: Environment, stmt: Stmt): Object|null {
 
 export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	try {
-		executeBlock(ctx.environment, statements)
+		executeBlock(ctx, statements)
 	} catch (e) {
 		if (e instanceof RuntimeError) {
 			ctx.runtimeError(e)

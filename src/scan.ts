@@ -1,6 +1,6 @@
 import { ParserContext } from './parseTokens'
-import { Token } from './Token'
-import { keywords, TokenType } from './TokenType'
+import { Token } from './token'
+import { keywords, TokenType } from './tokenType'
 
 const isDigit = (c: string) => c >= '0' && c <= '9'
 

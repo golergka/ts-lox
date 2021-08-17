@@ -1,5 +1,5 @@
 import { Expr } from './Expr'
-import { Token } from '../Token'
+import { Token } from '../token'
 
 export interface BlockStmt {
     type: 'block'

@@ -1,8 +1,8 @@
 import { mock, instance } from 'ts-mockito'
 import { ParserContext } from './parseTokens'
 import { scan } from './scan'
-import { Token } from './Token'
-import { TokenType } from './TokenType'
+import { Token } from './token'
+import { TokenType } from './tokenType'
 
 describe('Scanner', () => {
 	let mockedCtx: ParserContext

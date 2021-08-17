@@ -23,8 +23,8 @@ import {
 	varStmt,
 	whileStmt
 } from './generated/Stmt'
-import { Token } from './Token'
-import { TokenType } from './TokenType'
+import { Token } from './token'
+import { TokenType } from './tokenType'
 
 export interface ParserContext {
 	parserError(line: number, message: string): void
