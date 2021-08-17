@@ -16,7 +16,9 @@ import {
 	breakStmt,
 	continueStmt,
 	expressionStmt,
+	functionStmt,
 	ifStmt,
+	printStmt,
 	varStmt,
 	whileStmt
 } from './generated/Stmt'
@@ -26,6 +28,7 @@ import {
 	InterpreterContext,
 	RuntimeError
 } from './interpret'
+import { LoxFunction } from './loxFunction'
 import { Token } from './token'
 
 let env: Environment
@@ -33,7 +36,11 @@ let ctx: InterpreterContext
 let spyCtx: InterpreterContext
 
 class MockContext implements InterpreterContext {
-	public constructor(public environment: Environment) {}
+	public readonly globals: Environment
+
+	public constructor(public environment: Environment) {
+		this.globals = environment
+	}
 
 	runtimeError(error: RuntimeError): void {}
 }
@@ -226,7 +233,7 @@ describe('evaluate', () => {
 			expect(() => evaluate(ctx, expr)).toThrow()
 		})
 	})
-	
+
 	describe('function calls', () => {
 		it('calls a function', () => {
 			const callable: Callable = {
@@ -265,7 +272,7 @@ describe('evaluate', () => {
 				new Token('LEFT_PAREN', '(', '(', 1),
 				[literalExpr(1)]
 			)
-			expect(() => evaluate(ctx, expr)).toThrow()	
+			expect(() => evaluate(ctx, expr)).toThrow()
 		})
 	})
 })
@@ -383,4 +390,19 @@ describe('intepret', () => {
 		})
 	})
 
+	describe('function declaration', () => {
+		it('defines a function', () => {
+			const stmts = [
+				functionStmt(
+					new Token('IDENTIFIER', 'foo', undefined, 1),
+					[],
+					[printStmt(literalExpr('hello world'))]
+				)
+			]
+			interpret(ctx, stmts)
+			const fn = env.get(new Token('IDENTIFIER', 'foo', undefined, 1))
+			expect(fn).toBeInstanceOf(LoxFunction)
+			expect((fn as LoxFunction).arity).toBe(0)
+		})
+	})
 })

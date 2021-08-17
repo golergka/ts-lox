@@ -1,7 +1,7 @@
 import { InterpreterContext } from './interpret'
 
 export interface Callable {
-	call(ctx: InterpreterContext, args: Object | null[]): Object | null
+	call(ctx: InterpreterContext, args: (Object | null)[]): Object | null
     get arity(): number
 }
 

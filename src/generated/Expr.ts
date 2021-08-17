@@ -1,4 +1,4 @@
-import { Token } from '../token'
+import { Token } from '../Token'
 
 export interface ConditionalExpr {
     type: 'conditional'

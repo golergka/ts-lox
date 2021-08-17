@@ -3,7 +3,8 @@ import { Environment } from './environment'
 import { Expr } from './generated/Expr'
 import { Stmt } from './generated/Stmt'
 import { Token } from './token'
-import { Callable, isCallable } from './callable'
+import { isCallable } from './callable'
+import { LoxFunction } from './loxFunction'
 
 export class RuntimeError extends Error {
 	constructor(public readonly token: Token, message: string) {
@@ -13,6 +14,7 @@ export class RuntimeError extends Error {
 
 export interface InterpreterContext {
 	runtimeError(error: RuntimeError): void
+	get globals(): Environment
 	environment: Environment
 }
 
@@ -168,7 +170,7 @@ function stringify(object: Object | null) {
 	return object.toString()
 }
 
-function executeBlock(ctx: InterpreterContext, stmts: Stmt[]): void {
+export function executeBlock(ctx: InterpreterContext, stmts: Stmt[]): void {
 	for (const stmt of stmts) {
 		execute(ctx, stmt)
 	}
@@ -228,6 +230,11 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 					}
 				}
 			}
+			return null
+		}
+		case 'function': {
+			const func = new LoxFunction(stmt)
+			ctx.environment.define(stmt.name, func)
 			return null
 		}
 		case 'break': {

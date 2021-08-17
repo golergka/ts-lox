@@ -14,7 +14,12 @@ class Context implements ParserContext, InterpreterContext {
 	private _hadError = false
 	private _hadRuntimeError = false
 
-	public environment: Environment = createGlobal()
+	public environment: Environment
+	public readonly globals: Environment
+	
+	public constructor() {
+		this.environment = this.globals = createGlobal()
+	}
 	
 	public get hadError() {
 		return this._hadError

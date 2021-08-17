@@ -17,6 +17,7 @@ import {
 	continueErrorStmt,
 	continueStmt,
 	expressionStmt,
+	functionStmt,
 	ifStmt,
 	printStmt,
 	Stmt,
@@ -112,7 +113,7 @@ export function parseTokens(
 				args.push(expression())
 			} while (match('COMMA'))
 		}
-		
+
 		const paren = consume('RIGHT_PAREN', 'Expect ")" after arguments.')
 		return callExpr(expr, paren, args)
 	}
@@ -123,7 +124,7 @@ export function parseTokens(
 		while (match('LEFT_PAREN')) {
 			expr = finishCall(expr)
 		}
-		
+
 		return expr
 	}
 
@@ -364,6 +365,24 @@ export function parseTokens(
 		}
 	}
 
+	function functionDeclaration(kind: string) {
+		const name = consume('IDENTIFIER', `Expect ${kind} name.`)
+		consume('LEFT_PAREN', `Expect '(' after ${kind} name.`)
+		const parameters: Token[] = []
+		if (!check('RIGHT_PAREN')) {
+			do {
+				if (parameters.length >= 255) {
+					error(peek(), "Can't have more than 255 parameters.")
+				}
+				parameters.push(consume('IDENTIFIER', `Expect parameter name.`))
+			} while (match('COMMA'))
+		}
+		consume('RIGHT_PAREN', `Expect ')' after parameters.`)
+		consume('LEFT_BRACE', `Expect '{' before ${kind} body.`)
+		const body = blockStatement(false)
+		return functionStmt(name, parameters, body)
+	}
+
 	function variableDeclaration() {
 		const name = consume('IDENTIFIER', 'Expect variable name.')
 		const initializer = match('EQUAL') ? expression() : undefined
@@ -381,9 +400,9 @@ export function parseTokens(
 		loopControls: boolean
 	): Stmt | Expr | null {
 		try {
-			return match('VAR')
-				? variableDeclaration()
-				: statement(expressions, loopControls)
+			if (match('FUN')) return functionDeclaration('function')
+			if (match('VAR')) return variableDeclaration()
+			return statement(expressions, loopControls)
 		} catch (e) {
 			if (e instanceof ParseError) {
 				synchronize()
@@ -405,6 +424,7 @@ export function parseTokens(
 				case 'var':
 				case 'if':
 				case 'while':
+				case 'function':
 					statements.push(first)
 					break
 				// All possible expressions

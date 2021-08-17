@@ -1,5 +1,5 @@
 import { Expr } from './Expr'
-import { Token } from '../token'
+import { Token } from '../Token'
 
 export interface BlockStmt {
     type: 'block'
@@ -26,6 +26,26 @@ export function expressionStmt(
     return {
         type: 'expression',
         expression,
+    }
+}
+
+export interface FunctionStmt {
+    type: 'function'
+    name: Token
+    params: Token[]
+    body: Stmt[]
+}
+
+export function functionStmt(
+    name: Token,
+    params: Token[],
+    body: Stmt[],
+): FunctionStmt {
+    return {
+        type: 'function',
+        name,
+        params,
+        body,
     }
 }
 
@@ -156,6 +176,7 @@ export function continueErrorStmt(
 export type Stmt =
     | BlockStmt
     | ExpressionStmt
+    | FunctionStmt
     | IfStmt
     | PrintStmt
     | VarStmt

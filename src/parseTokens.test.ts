@@ -17,7 +17,8 @@ import {
 	ifStmt,
 	printStmt,
 	varStmt,
-	whileStmt
+	whileStmt,
+	functionStmt
 } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './token'
@@ -420,6 +421,22 @@ describe(`parseTokens`, () => {
 					'Invalid continue statement'
 				)
 			).once()
+		})
+
+		it('fun example() {}', () => {
+			const tokens: Token[] = [
+				new Token('FUN', 'fun', 'fun', 1),
+				new Token('IDENTIFIER', 'example', 'example', 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				functionStmt(new Token('IDENTIFIER', 'example', 'example', 1), [], [])
+			])
 		})
 	})
 
