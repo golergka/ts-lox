@@ -8,6 +8,7 @@ import {
 	callExpr,
 	conditionalExpr,
 	groupingExpr,
+	lambdaExpr,
 	literalExpr,
 	variableExpr
 } from './generated/Expr'
@@ -43,7 +44,7 @@ class MockContext implements InterpreterContext {
 		this.globals = environment
 	}
 
-	print(value: string): void { }
+	print(value: string): void {}
 
 	runtimeError(error: RuntimeError): void {}
 }
@@ -73,7 +74,7 @@ describe('evaluate', () => {
 			const result = evaluate(ctx, expr)
 			expect(result).toEqual(2)
 		})
-		
+
 		it('2-1', () => {
 			const expr = binaryExpr(
 				literalExpr(2),
@@ -83,7 +84,7 @@ describe('evaluate', () => {
 			const result = evaluate(ctx, expr)
 			expect(result).toEqual(1)
 		})
-		
+
 		it('2*2', () => {
 			const expr = binaryExpr(
 				literalExpr(2),
@@ -91,9 +92,9 @@ describe('evaluate', () => {
 				literalExpr(2)
 			)
 			const result = evaluate(ctx, expr)
-			expect(result).toEqual(4)	
+			expect(result).toEqual(4)
 		})
-		
+
 		it('9/3', () => {
 			const expr = binaryExpr(
 				literalExpr(9),
@@ -312,8 +313,7 @@ describe('evaluate', () => {
 			env.define(
 				new Token('IDENTIFIER', 'fib', undefined, 1),
 				new LoxFunction(
-					functionStmt(
-						new Token('IDENTIFIER', 'fib', undefined, 1),
+					lambdaExpr(
 						[new Token('IDENTIFIER', 'n', undefined, 1)],
 						[
 							ifStmt(
@@ -336,7 +336,9 @@ describe('evaluate', () => {
 										new Token('LEFT_PAREN', '(', '(', 1),
 										[
 											binaryExpr(
-												variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
+												variableExpr(
+													new Token('IDENTIFIER', 'n', undefined, 1)
+												),
 												new Token('MINUS', '-', null, 1),
 												literalExpr(2)
 											)
@@ -348,7 +350,9 @@ describe('evaluate', () => {
 										new Token('LEFT_PAREN', '(', '(', 1),
 										[
 											binaryExpr(
-												variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
+												variableExpr(
+													new Token('IDENTIFIER', 'n', undefined, 1)
+												),
 												new Token('MINUS', '-', null, 1),
 												literalExpr(1)
 											)
@@ -490,8 +494,7 @@ describe('intepret', () => {
 			const stmts = [
 				functionStmt(
 					new Token('IDENTIFIER', 'foo', undefined, 1),
-					[],
-					[printStmt(literalExpr('hello world'))]
+					lambdaExpr([], [printStmt(literalExpr('hello world'))])
 				)
 			]
 			interpret(ctx, stmts)

@@ -3,6 +3,7 @@ import {
 	binaryErrorExpr,
 	binaryExpr,
 	conditionalExpr,
+	lambdaExpr,
 	literalExpr,
 	unaryExpr,
 	variableExpr
@@ -23,6 +24,7 @@ import {
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './token'
 import { mock, instance, verify, anything } from 'ts-mockito'
+import { printExpr } from './printExpr'
 
 describe(`parseTokens`, () => {
 	let mockedCtx: ParserContext
@@ -264,6 +266,19 @@ describe(`parseTokens`, () => {
 			])
 		})
 
+		it('print "hello world";', () => {
+			const tokens: Token[] = [
+				new Token('PRINT', 'print', undefined, 1),
+				new Token('STRING', '"hello world"', 'hello world', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				printStmt(literalExpr('hello world'))
+			])	
+		})
+
 		it('while (true) print "hello world"', () => {
 			const tokens: Token[] = [
 				new Token('WHILE', 'while', undefined, 1),
@@ -280,7 +295,7 @@ describe(`parseTokens`, () => {
 				whileStmt(literalExpr(true), printStmt(literalExpr('hello world')))
 			])
 		})
-
+		
 		it('for (var i = 0; i < 10; i = i + 1) print "hello world"', () => {
 			const tokens: Token[] = [
 				new Token('FOR', 'for', undefined, 1),
@@ -435,7 +450,10 @@ describe(`parseTokens`, () => {
 			]
 			const result = parseTokens(ctx, tokens, false)
 			expect(result).toEqual([
-				functionStmt(new Token('IDENTIFIER', 'example', 'example', 1), [], [])
+				functionStmt(
+					new Token('IDENTIFIER', 'example', 'example', 1),
+					lambdaExpr([], [])
+				)
 			])
 		})
 	})
@@ -613,6 +631,37 @@ describe(`parseTokens`, () => {
 			const result = parseTokens(ctx, tokens, true)
 			expect(result).toEqual(
 				conditionalExpr(literalExpr(true), literalExpr(1), literalExpr(2))
+			)
+		})
+
+		it('fun() {}', () => {
+			const tokens: Token[] = [
+				new Token('FUN', 'function', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(lambdaExpr([], []))
+		})
+
+		it('fun() { print "hello world"; }', () => {
+			const tokens: Token[] = [
+				new Token('FUN', 'function', undefined, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('PRINT', 'print', undefined, 1),
+				new Token('STRING', '"hello world"', 'hello world', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(
+				lambdaExpr([], [printStmt(literalExpr('hello world'))])
 			)
 		})
 	})

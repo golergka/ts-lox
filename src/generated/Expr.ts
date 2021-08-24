@@ -1,4 +1,5 @@
 import { Token } from '../Token'
+import { Stmt } from './Stmt'
 
 export interface ConditionalExpr {
     type: 'conditional'
@@ -153,6 +154,23 @@ export function variableExpr(
     }
 }
 
+export interface LambdaExpr {
+    type: 'lambda'
+    params: Token[]
+    body: Stmt[]
+}
+
+export function lambdaExpr(
+    params: Token[],
+    body: Stmt[],
+): LambdaExpr {
+    return {
+        type: 'lambda',
+        params,
+        body,
+    }
+}
+
 export type Expr =
     | ConditionalExpr
     | AssignmentExpr
@@ -163,4 +181,5 @@ export type Expr =
     | LiteralExpr
     | UnaryExpr
     | VariableExpr
+    | LambdaExpr
 

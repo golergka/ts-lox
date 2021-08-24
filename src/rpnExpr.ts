@@ -37,5 +37,7 @@ export function rpnExpr(expr: Expr): string {
 				rpnExpr(expr.callee),
 				'call'
 			].join(' ')
+		case 'lambda':
+			return '<anonymous function>'
 	}
 }

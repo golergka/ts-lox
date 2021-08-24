@@ -66,3 +66,23 @@ it('fibonacci', () => {
     // 9
     verify(spyCtx.print("34")).once()
 })
+
+it('lambdas', () => {
+    const source = `
+        fun thrice(fn) {
+            for (var i = 1; i <= 3; i = i + 1) {
+                fn(i);
+            }
+        }
+
+        thrice(fun (a) {
+            print a;
+        });
+    `
+    
+    run(ctx, source)
+
+    verify(spyCtx.print("1")).once()
+    verify(spyCtx.print("2")).once()
+    verify(spyCtx.print("3")).once()
+})

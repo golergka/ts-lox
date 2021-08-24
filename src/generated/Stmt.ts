@@ -1,4 +1,4 @@
-import { Expr } from './Expr'
+import { Expr, LambdaExpr } from './Expr'
 import { Token } from '../Token'
 
 export interface BlockStmt {
@@ -32,20 +32,17 @@ export function expressionStmt(
 export interface FunctionStmt {
     type: 'function'
     name: Token
-    params: Token[]
-    body: Stmt[]
+    lambda: LambdaExpr
 }
 
 export function functionStmt(
     name: Token,
-    params: Token[],
-    body: Stmt[],
+    lambda: LambdaExpr,
 ): FunctionStmt {
     return {
         type: 'function',
         name,
-        params,
-        body,
+        lambda,
     }
 }
 

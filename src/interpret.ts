@@ -156,6 +156,9 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 				return result
 			}
 		}
+		
+		case 'lambda': 
+			return new LoxFunction(expr, ctx.environment)
 	}
 }
 
@@ -242,7 +245,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			return null
 		}
 		case 'function': {
-			const func = new LoxFunction(stmt, ctx.environment)
+			const func = new LoxFunction(stmt.lambda, ctx.environment)
 			ctx.environment.define(stmt.name, func)
 			return null
 		}

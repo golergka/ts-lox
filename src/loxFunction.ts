@@ -1,11 +1,11 @@
 import { Callable } from './callable'
 import { Environment } from './environment'
-import { FunctionStmt } from './generated/Stmt'
+import { LambdaExpr } from './generated/Expr'
 import { executeBlock, InterpreterContext, Return } from './interpret'
 
 export class LoxFunction implements Callable {
 	public constructor(
-        private readonly declaration: FunctionStmt,
+        private readonly declaration: LambdaExpr,
         private readonly closure: Environment
     ) {}
 

@@ -20,9 +20,13 @@ defineAst(
 		'Grouping    : Expr expression',
 		'Literal     : Object|null value',
 		'Unary       : Token operator, Expr right',
-		'Variable    : Token name'
+		'Variable    : Token name',
+		'Lambda      : Token[] params, Stmt[] body'
 	],
-	[[['Token'], '../Token']]
+	[
+		[['Token'], '../Token'],
+		[['Stmt'], './Stmt'],
+	]
 )
 
 defineAst(
@@ -31,7 +35,7 @@ defineAst(
 	[
 		'Block 		: Stmt[] statements',
 		'Expression : Expr expression',
-		'Function   : Token name, Token[] params, Stmt[] body',
+		'Function   : Token name, LambdaExpr lambda',
 		'If         : Expr condition, Stmt consequent, Stmt|null alternative',
 		'Print      : Expr expression',
 		'Return     : Token keyword, Expr|null value',
@@ -43,7 +47,7 @@ defineAst(
 		'ContinueError : Token body'
 	],
 	[
-		[['Expr'], './Expr'],
+		[['Expr', 'LambdaExpr'], './Expr'],
 		[['Token'], '../Token']
 	]
 )

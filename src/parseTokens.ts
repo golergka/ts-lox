@@ -8,7 +8,8 @@ import {
 	literalExpr,
 	unaryExpr,
 	variableExpr,
-	callExpr
+	callExpr,
+	lambdaExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -57,9 +58,15 @@ export function parseTokens(
 		return previous()
 	}
 
-	/** Returns true if the current token is of given type. */
-	function check(type: TokenType): boolean {
-		return !isAtEnd() && peek().type === type
+	/** Returns true if tokens starting from current are of correct types. */
+	function check(...types: TokenType[]): boolean {
+		let index = current
+		for (const type of types) {
+			const token = tokens[index]
+			if (token.type === 'EOF' || token.type !== type) return false
+			index++
+		}
+		return true
 	}
 
 	/** Matches any of the given token types. */
@@ -205,7 +212,30 @@ export function parseTokens(
 		return expr
 	}
 
+	function functionParameters(kind: string) {
+		consume('LEFT_PAREN', `Expect '(' before ${kind} parameters`)
+		const parameters: Token[] = []
+		if (!check('RIGHT_PAREN')) {
+			do {
+				if (parameters.length >= 255) {
+					error(peek(), "Can't have more than 255 parameters.")
+				}
+				parameters.push(consume('IDENTIFIER', `Expect parameter name.`))
+			} while (match('COMMA'))
+		}
+		consume('RIGHT_PAREN', `Expect ')' after ${kind} parameters.`)
+		return parameters
+	}
+
+	function lambda(): Expr {
+		const parameters = functionParameters('lambda')
+		consume('LEFT_BRACE', "Expect '{' before lambda body.")
+		const body = blockStatement(false)
+		return lambdaExpr(parameters, body)
+	}
+
 	function expression() {
+		if (match('FUN')) return lambda()
 		return assignment()
 	}
 
@@ -292,7 +322,7 @@ export function parseTokens(
 		consume('SEMICOLON', "Expect ';' after value.")
 		return printStmt(value)
 	}
-	
+
 	function returnStatement(): Stmt {
 		const keyword = previous()
 		let value = null
@@ -379,20 +409,10 @@ export function parseTokens(
 
 	function functionDeclaration(kind: string) {
 		const name = consume('IDENTIFIER', `Expect ${kind} name.`)
-		consume('LEFT_PAREN', `Expect '(' after ${kind} name.`)
-		const parameters: Token[] = []
-		if (!check('RIGHT_PAREN')) {
-			do {
-				if (parameters.length >= 255) {
-					error(peek(), "Can't have more than 255 parameters.")
-				}
-				parameters.push(consume('IDENTIFIER', `Expect parameter name.`))
-			} while (match('COMMA'))
-		}
-		consume('RIGHT_PAREN', `Expect ')' after parameters.`)
+		const parameters = functionParameters(kind)
 		consume('LEFT_BRACE', `Expect '{' before ${kind} body.`)
 		const body = blockStatement(false)
-		return functionStmt(name, parameters, body)
+		return functionStmt(name, lambdaExpr(parameters, body))
 	}
 
 	function variableDeclaration() {
@@ -412,7 +432,10 @@ export function parseTokens(
 		loopControls: boolean
 	): Stmt | Expr | null {
 		try {
-			if (match('FUN')) return functionDeclaration('function')
+			if (check('FUN', 'IDENTIFIER')) {
+				match('FUN')
+				return functionDeclaration('function')
+			}
 			if (match('VAR')) return variableDeclaration()
 			return statement(expressions, loopControls)
 		} catch (e) {
@@ -454,6 +477,7 @@ export function parseTokens(
 				case 'literal':
 				case 'unary':
 				case 'variable':
+				case 'lambda':
 					return first
 			}
 		}
