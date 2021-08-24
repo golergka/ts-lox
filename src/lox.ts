@@ -13,7 +13,7 @@ import {
 import { ParserContext, parseTokens } from './parseTokens'
 import { scan } from './scan'
 
-class Context implements ParserContext, InterpreterContext {
+export class Context implements ParserContext, InterpreterContext {
 	private _hadError = false
 	private _hadRuntimeError = false
 
@@ -23,6 +23,7 @@ class Context implements ParserContext, InterpreterContext {
 	public constructor() {
 		this.environment = this.globals = createGlobal()
 	}
+
 	print(value: string): void {
 		console.log(value)
 	}
@@ -40,7 +41,7 @@ class Context implements ParserContext, InterpreterContext {
 	parserError(line: number, arg1: string, arg2?: string) {
 		const where = arg2 ? arg1 : ''
 		const message = arg2 || arg1
-		console.log(`[line ${line}] Error${where}: ${message}`)
+		console.error(`[line ${line}] Error${where}: ${message}`)
 		this._hadError = true
 	}
 
@@ -86,7 +87,7 @@ export async function runPrompt() {
 	}
 }
 
-function run(ctx: Context, source: string, filename?: string) {
+export function run(ctx: Context, source: string, filename?: string) {
 	const tokens = scan(ctx, source)
 	const stmts = parseTokens(ctx, tokens, !filename)
 
