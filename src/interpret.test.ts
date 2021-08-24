@@ -43,6 +43,8 @@ class MockContext implements InterpreterContext {
 		this.globals = environment
 	}
 
+	print(value: string): void { }
+
 	runtimeError(error: RuntimeError): void {}
 }
 
@@ -355,7 +357,8 @@ describe('evaluate', () => {
 								)
 							)
 						]
-					)
+					),
+					env
 				)
 			)
 			const expr = callExpr(

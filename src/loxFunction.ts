@@ -4,10 +4,13 @@ import { FunctionStmt } from './generated/Stmt'
 import { executeBlock, InterpreterContext, Return } from './interpret'
 
 export class LoxFunction implements Callable {
-	public constructor(private readonly declaration: FunctionStmt) {}
+	public constructor(
+        private readonly declaration: FunctionStmt,
+        private readonly closure: Environment
+    ) {}
 
 	public call(ctx: InterpreterContext, args: (Object | null)[]): Object | null {
-		const environment = new Environment(ctx.globals)
+		const environment = new Environment(this.closure)
 		this.declaration.params.forEach((p, index) =>
 			environment.define(p, args[index])
 		)

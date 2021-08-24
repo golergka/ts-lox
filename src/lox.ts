@@ -23,6 +23,9 @@ class Context implements ParserContext, InterpreterContext {
 	public constructor() {
 		this.environment = this.globals = createGlobal()
 	}
+	print(value: string): void {
+		console.log(value)
+	}
 
 	public get hadError() {
 		return this._hadError

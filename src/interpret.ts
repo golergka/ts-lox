@@ -14,6 +14,7 @@ export class RuntimeError extends Error {
 
 export interface InterpreterContext {
 	runtimeError(error: RuntimeError): void
+	print(value: string): void
 	get globals(): Environment
 	environment: Environment
 }
@@ -196,7 +197,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 		}
 		case 'print': {
 			const value = evaluate(ctx, stmt.expression)
-			console.log(stringify(value))
+			ctx.print(stringify(value))
 			return value
 		}
 		case 'var': {
@@ -241,7 +242,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			return null
 		}
 		case 'function': {
-			const func = new LoxFunction(stmt)
+			const func = new LoxFunction(stmt, ctx.environment)
 			ctx.environment.define(stmt.name, func)
 			return null
 		}
