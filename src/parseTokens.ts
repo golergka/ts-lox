@@ -26,6 +26,7 @@ import {
 	varStmt,
 	whileStmt
 } from './generated/Stmt'
+import { ParseError, parseError } from './parseError'
 import { Token } from './token'
 import { TokenType } from './tokenType'
 
@@ -80,16 +81,7 @@ export function parseTokens(
 		return false
 	}
 
-	class ParseError extends Error {}
-
-	function error(token: Token, message: string) {
-		if (token.type === 'EOF') {
-			ctx.parserError(token.line, ' at end', message)
-		} else {
-			ctx.parserError(token.line, ` at '${token.lexeme}'`, message)
-		}
-		return new ParseError()
-	}
+	const error = parseError(ctx)
 
 	function consume(type: TokenType, message: string) {
 		if (check(type)) return advance()
