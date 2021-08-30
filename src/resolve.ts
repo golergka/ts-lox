@@ -6,10 +6,12 @@ import { Token } from './Token'
 
 export function resolve(
 	ctx: ParserContext,
-	stmts: Stmt[]|Expr
+	stmts: Stmt[] | Expr
 ): { locals: Map<Expr, number> } {
 	const scopes: Map<string, boolean>[] = []
-    const locals: Map<Expr, number> = new Map()
+	const locals: Map<Expr, number> = new Map()
+
+	const error = parseError(ctx)
 
 	function peekScope() {
 		return scopes[scopes.length - 1]
@@ -27,6 +29,9 @@ export function resolve(
 		if (scopes.length === 0) return
 
 		const scope = peekScope()
+		if (scope.has(name.lexeme)) {
+			error(name, `Variable '${name.lexeme}' already declared in this scope`)
+		}
 		scope.set(name.lexeme, false)
 	}
 
@@ -35,8 +40,6 @@ export function resolve(
 
 		peekScope().set(name.lexeme, true)
 	}
-
-	const error = parseError(ctx)
 
 	function resolveLocal(expr: Expr, name: Token) {
 		for (let i = scopes.length - 1; i >= 0; i--) {
@@ -184,6 +187,6 @@ export function resolve(
 	} else {
 		resolveStmts(stmts as Stmt[])
 	}
-	
+
 	return { locals }
 }

@@ -24,7 +24,6 @@ import {
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './token'
 import { mock, instance, verify, anything } from 'ts-mockito'
-import { printExpr } from './printExpr'
 
 describe(`parseTokens`, () => {
 	let mockedCtx: ParserContext
