@@ -97,6 +97,8 @@ export function run(ctx: Context, source: string, filename?: string) {
 
 	const { locals } = resolve(ctx, stmts)
 	ctx.locals = locals
+	
+	if (ctx.hadError) return
 
 	if (Object.hasOwnProperty.call(stmts, 'type')) {
 		const value = evaluate(ctx, stmts as Expr)

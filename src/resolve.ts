@@ -4,12 +4,15 @@ import { parseError } from './parseError'
 import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 
+type FunctionType = 'function' | 'none'
+
 export function resolve(
 	ctx: ParserContext,
 	stmts: Stmt[] | Expr
 ): { locals: Map<Expr, number> } {
 	const scopes: Map<string, boolean>[] = []
 	const locals: Map<Expr, number> = new Map()
+	let currentFunction: FunctionType = 'none'
 
 	const error = parseError(ctx)
 
@@ -50,6 +53,8 @@ export function resolve(
 	}
 
 	function resolveLambda(lambda: LambdaExpr) {
+		const enclosingFunction = currentFunction
+		currentFunction = 'function'
 		beginScope()
 		for (const param of lambda.params) {
 			declare(param)
@@ -57,6 +62,7 @@ export function resolve(
 		}
 		resolveStmts(lambda.body)
 		endScope()
+		currentFunction = enclosingFunction
 	}
 
 	function resolveExpr(expr: Expr): true {
@@ -158,6 +164,9 @@ export function resolve(
 				return true
 			}
 			case 'return': {
+				if (currentFunction === 'none') {
+					error(stmt.keyword, 'Cannot return from top-level code.')
+				}
 				if (stmt.value != null) {
 					resolveExpr(stmt.value)
 				}
