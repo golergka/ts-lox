@@ -7,6 +7,7 @@ import {
 	binaryExpr,
 	callExpr,
 	conditionalExpr,
+	Expr,
 	groupingExpr,
 	lambdaExpr,
 	literalExpr,
@@ -34,13 +35,17 @@ import { LoxFunction } from './loxFunction'
 import { Token } from './token'
 
 let env: Environment
+let locals: Map<Expr, number>
 let ctx: InterpreterContext
 let spyCtx: InterpreterContext
 
 class MockContext implements InterpreterContext {
 	public readonly globals: Environment
 
-	public constructor(public environment: Environment) {
+	public constructor(
+		public readonly locals: Map<Expr, number>,
+		public environment: Environment
+	) {
 		this.globals = environment
 	}
 
@@ -51,7 +56,8 @@ class MockContext implements InterpreterContext {
 
 beforeEach(() => {
 	env = new Environment(createGlobal())
-	ctx = new MockContext(env)
+	locals = new Map()
+	ctx = new MockContext(locals, env)
 	spyCtx = spy(ctx)
 })
 
@@ -310,6 +316,20 @@ describe('evaluate', () => {
 		})
 
 		it('calculates fibonacci numbers', () => {
+			/**
+			 * function fib(n) {
+			 * 	 if (n <= 1) {
+			 *     return 1
+			 *   }
+			 *   return fib(n - 1) + fib(n - 2)
+			 * }
+			 */
+
+			// In real code, these would be different expressions for all the
+			// occurrences of the variable, but for the sake of simplicity,
+			// we'll just use the same one for all of them.
+			const nVarExpr = variableExpr(new Token('IDENTIFIER', 'n', undefined, 1))
+			const fibInnerVarExpr = variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1))
 			env.define(
 				new Token('IDENTIFIER', 'fib', undefined, 1),
 				new LoxFunction(
@@ -318,13 +338,13 @@ describe('evaluate', () => {
 						[
 							ifStmt(
 								binaryExpr(
-									variableExpr(new Token('IDENTIFIER', 'n', undefined, 1)),
-									new Token('LESS_EQUAL', '<', null, 1),
+									nVarExpr,
+									new Token('LESS_EQUAL', '<=', null, 1),
 									literalExpr(1)
 								),
 								returnStmt(
 									new Token('RETURN', 'return', undefined, 1),
-									variableExpr(new Token('IDENTIFIER', 'n', undefined, 1))
+									nVarExpr
 								),
 								null
 							),
@@ -332,13 +352,11 @@ describe('evaluate', () => {
 								new Token('RETURN', 'return', undefined, 1),
 								binaryExpr(
 									callExpr(
-										variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+										fibInnerVarExpr,
 										new Token('LEFT_PAREN', '(', '(', 1),
 										[
 											binaryExpr(
-												variableExpr(
-													new Token('IDENTIFIER', 'n', undefined, 1)
-												),
+												nVarExpr,
 												new Token('MINUS', '-', null, 1),
 												literalExpr(2)
 											)
@@ -346,13 +364,11 @@ describe('evaluate', () => {
 									),
 									new Token('PLUS', '+', null, 1),
 									callExpr(
-										variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+										fibInnerVarExpr,
 										new Token('LEFT_PAREN', '(', '(', 1),
 										[
 											binaryExpr(
-												variableExpr(
-													new Token('IDENTIFIER', 'n', undefined, 1)
-												),
+												nVarExpr,
 												new Token('MINUS', '-', null, 1),
 												literalExpr(1)
 											)
@@ -365,8 +381,12 @@ describe('evaluate', () => {
 					env
 				)
 			)
+			locals.set(fibInnerVarExpr, 1)
+			locals.set(nVarExpr, 0)
+			const fibOuterVarExpr = variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1))
+			locals.set(fibOuterVarExpr, 0)
 			const expr = callExpr(
-				variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1)),
+				fibOuterVarExpr,
 				new Token('LEFT_PAREN', '(', '(', 1),
 				[literalExpr(6)]
 			)

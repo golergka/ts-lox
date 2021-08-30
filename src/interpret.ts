@@ -15,6 +15,7 @@ export class RuntimeError extends Error {
 export interface InterpreterContext {
 	runtimeError(error: RuntimeError): void
 	print(value: string): void
+	get locals(): Map<Expr, number>
 	get globals(): Environment
 	environment: Environment
 }
@@ -129,12 +130,22 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 		}
 
 		case 'variable': {
-			return ctx.environment.get(expr.name)
+			const distance = ctx.locals.get(expr)
+			if (distance !== undefined) {
+				return ctx.environment.getAt(distance, expr.name)
+			} else {
+				return ctx.globals.get(expr.name)
+			}
 		}
 
 		case 'assignment': {
 			const value = evaluate(ctx, expr.value)
-			ctx.environment.assign(expr.name, value)
+			const distance = ctx.locals.get(expr)
+			if (distance !== undefined) {
+				ctx.environment.assignAt(distance, expr.name, value)
+			} else {
+				ctx.globals.assign(expr.name, value)
+			}
 			return value
 		}
 

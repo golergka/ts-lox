@@ -1,3 +1,4 @@
+import { thrw } from 'thrw'
 import { RuntimeError } from './interpret'
 import { Token } from './token'
 
@@ -16,7 +17,7 @@ export class Environment {
 		this.values.set(name.lexeme, value)
 	}
 
-	public get(name: Token): Object|null {
+	public get(name: Token): Object | null {
 		if (this.values.has(name.lexeme)) {
 			const value = this.values.get(name.lexeme)
 			if (value === undefined) {
@@ -38,5 +39,25 @@ export class Environment {
 		} else {
 			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
 		}
+	}
+
+	public getAt(distance: number, name: Token): Object | null {
+		const value = this.ancestor(distance).values.get(name.lexeme)
+		if (value === undefined) {
+			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
+		}
+		return value
+	}
+
+	public ancestor(distance: number) {
+		let environment: Environment = this
+		for (let i = 0; i < distance; i++) {
+			environment = environment.enclosing || thrw(`No ancestor`)
+		}
+		return environment
+	}
+
+	public assignAt(distance: number, name: Token, value: Object | null) {
+		this.ancestor(distance).values.set(name.lexeme, value)
 	}
 }

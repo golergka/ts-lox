@@ -11,6 +11,7 @@ import {
 	RuntimeError
 } from './interpret'
 import { ParserContext, parseTokens } from './parseTokens'
+import { resolve } from './resolve'
 import { scan } from './scan'
 
 export class Context implements ParserContext, InterpreterContext {
@@ -18,6 +19,7 @@ export class Context implements ParserContext, InterpreterContext {
 	private _hadRuntimeError = false
 
 	public environment: Environment
+	public locals: Map<Expr, number> = new Map()
 	public readonly globals: Environment
 
 	public constructor() {
@@ -92,6 +94,9 @@ export function run(ctx: Context, source: string, filename?: string) {
 	const stmts = parseTokens(ctx, tokens, !filename)
 
 	if (!stmts || ctx.hadError) return
+
+	const { locals } = resolve(ctx, stmts)
+	ctx.locals = locals
 
 	if (Object.hasOwnProperty.call(stmts, 'type')) {
 		const value = evaluate(ctx, stmts as Expr)
