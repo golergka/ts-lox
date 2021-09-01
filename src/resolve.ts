@@ -10,7 +10,11 @@ export function resolve(
 	ctx: ParserContext,
 	stmts: Stmt[] | Expr
 ): { locals: Map<Expr, number> } {
-	const scopes: Map<string, boolean>[] = []
+	const scopes: Map<string, {
+		readonly name: Token
+		defined: boolean
+		used: boolean
+	}>[] = []
 	const locals: Map<Expr, number> = new Map()
 	let currentFunction: FunctionType = 'none'
 
@@ -25,6 +29,14 @@ export function resolve(
 	}
 
 	function endScope() {
+		for (const [_, { defined, used, name }] of peekScope()) {
+			if (!defined) {
+				error(name, `${name.lexeme} is declared but never defined`)
+			}
+			if (!used) {
+				error(name, `${name.lexeme} is never used`)
+			}
+		}
 		scopes.pop()
 	}
 
@@ -35,19 +47,27 @@ export function resolve(
 		if (scope.has(name.lexeme)) {
 			error(name, `Variable '${name.lexeme}' already declared in this scope`)
 		}
-		scope.set(name.lexeme, false)
+		scope.set(name.lexeme, { defined: false, used: false, name })
 	}
 
 	function define(name: Token) {
 		if (scopes.length === 0) return
 
-		peekScope().set(name.lexeme, true)
+		const variable = peekScope().get(name.lexeme)
+		if (!variable) {
+			error(name, `Variable ${name.lexeme} not declared in this scope`)
+		} else {
+			variable.defined = true
+		}
 	}
 
 	function resolveLocal(expr: Expr, name: Token) {
 		for (let i = scopes.length - 1; i >= 0; i--) {
-			if (scopes[i].has(name.lexeme)) {
+			const variable = scopes[i].get(name.lexeme)
+			if (variable) {
+				variable.used = true
 				locals.set(expr, scopes.length - 1 - i)
+				return
 			}
 		}
 	}
@@ -70,7 +90,7 @@ export function resolve(
 			case 'variable': {
 				if (
 					scopes.length !== 0 &&
-					peekScope().get(expr.name.lexeme) === false
+					peekScope().get(expr.name.lexeme)?.defined === false
 				) {
 					error(
 						expr.name,
