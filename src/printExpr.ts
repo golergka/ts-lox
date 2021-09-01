@@ -27,7 +27,9 @@ export function printExpr(expr: Expr): string {
 		case 'call':
 			return parenthesize('call', expr.callee, ...expr.args)
 		case 'get':
-			return `(get, ${expr.object} ${expr.name})`
+			return `(get, ${printExpr(expr.object)} ${expr.name})`
+		case 'set':
+			return `(set ${printExpr(expr.object)} ${expr.name} ${printExpr(expr.value)})`
 		case 'lambda':
 			return '<anonymous function>'
 	}

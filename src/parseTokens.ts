@@ -10,7 +10,8 @@ import {
 	variableExpr,
 	callExpr,
 	lambdaExpr,
-	getExpr
+	getExpr,
+	setExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -67,6 +68,7 @@ function exprOrStmt(input: Expr|Stmt): { type: 'expr', expr: Expr }|{ type: 'stm
 		case 'variable':
 		case 'lambda':
 		case 'get':
+		case 'set':
 			return { type: 'expr', expr: input }
 	}
 }
@@ -239,6 +241,9 @@ export function parseTokens(
 			if (expr.type === 'variable') {
 				const name = expr.name
 				return assignmentExpr(name, value)
+			} else if (expr.type === 'get') {
+				const get = expr
+				return setExpr(get.object, get.name, value)
 			}
 
 			error(equals, 'Invalid assignment target.')

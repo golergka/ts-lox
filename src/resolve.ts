@@ -136,6 +136,11 @@ export function resolve(
 				resolveExpr(expr.object)
 				return true
 			}
+			case 'set': {
+				resolveExpr(expr.value)
+				resolveExpr(expr.object)
+				return true
+			}
 			case 'grouping': {
 				resolveExpr(expr.expression)
 				return true

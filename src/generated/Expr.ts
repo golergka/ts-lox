@@ -140,6 +140,26 @@ export function literalExpr(
     }
 }
 
+export interface SetExpr {
+    type: 'set'
+    object: Expr
+    name: Token
+    value: Expr
+}
+
+export function setExpr(
+    object: Expr,
+    name: Token,
+    value: Expr,
+): SetExpr {
+    return {
+        type: 'set',
+        object,
+        name,
+        value,
+    }
+}
+
 export interface UnaryExpr {
     type: 'unary'
     operator: Token
@@ -197,6 +217,7 @@ export type Expr =
     | GetExpr
     | GroupingExpr
     | LiteralExpr
+    | SetExpr
     | UnaryExpr
     | VariableExpr
     | LambdaExpr

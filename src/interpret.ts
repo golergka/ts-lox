@@ -179,6 +179,17 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 			throw new RuntimeError(expr.name, 'Only instances have properties')
 		}
 		
+		case 'set': {
+			const object = evaluate(ctx, expr.object)
+			if (object instanceof LoxInstance) {
+				const value = evaluate(ctx, expr.value)
+				object.set(expr.name, value)
+				return value
+			}
+			
+			throw new RuntimeError(expr.name, 'Only instances have fields')
+		}
+		
 		case 'lambda': 
 			return new LoxFunction(expr, ctx.environment)
 	}

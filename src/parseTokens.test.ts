@@ -7,6 +7,7 @@ import {
 	getExpr,
 	lambdaExpr,
 	literalExpr,
+	setExpr,
 	unaryExpr,
 	variableExpr
 } from './generated/Expr'
@@ -733,12 +734,41 @@ describe(`parseTokens`, () => {
 								new Token('IDENTIFIER', 'scramble', null, 1)
 							),
 							new Token('RIGHT_PAREN', ')', undefined, 1),
-							[ literalExpr(3) ]
+							[literalExpr(3)]
 						),
 						new Token('IDENTIFIER', 'with', null, 1)
 					),
 					new Token('RIGHT_PAREN', ')', undefined, 1),
 					[variableExpr(new Token('IDENTIFIER', 'cheddar', null, 1))]
+				)
+			)
+		})
+
+		it('breakfast.omelette.filling.meat = ham', () => {
+			const tokens: Token[] = [
+				new Token('IDENTIFIER', 'breakfast', null, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'omelette', null, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'filling', null, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'meat', null, 1),
+				new Token('EQUAL', '=', undefined, 1),
+				new Token('IDENTIFIER', 'ham', null, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(
+				setExpr(
+					getExpr(
+						getExpr(
+							variableExpr(new Token('IDENTIFIER', 'breakfast', null, 1)),
+							new Token('IDENTIFIER', 'omelette', null, 1)
+						),
+						new Token('IDENTIFIER', 'filling', null, 1)
+					),
+					new Token('IDENTIFIER', 'meat', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'ham', null, 1))
 				)
 			)
 		})
