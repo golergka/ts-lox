@@ -1,4 +1,4 @@
-import { spy } from 'ts-mockito'
+import { spy, verify } from 'ts-mockito'
 import { Callable } from './callable'
 import { createGlobal } from './createGlobal'
 import { Environment } from './environment'
@@ -16,6 +16,7 @@ import {
 import {
 	blockStmt,
 	breakStmt,
+	classStmt,
 	continueStmt,
 	expressionStmt,
 	functionStmt,
@@ -521,6 +522,33 @@ describe('intepret', () => {
 			const fn = env.get(new Token('IDENTIFIER', 'foo', undefined, 1))
 			expect(fn).toBeInstanceOf(LoxFunction)
 			expect((fn as LoxFunction).arity).toBe(0)
+		})
+	})
+	
+	describe('class declaration', () => {
+		it('prints a class', () => {
+			const stmts = [
+				classStmt(
+					new Token('IDENTIFIER', 'DevonshireCream', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'serveOn', null, 1),
+							lambdaExpr(
+								[],
+								[
+									returnStmt(
+										new Token('RETURN', 'return', null, 1),
+										literalExpr('Scones')
+									)
+								]
+							)
+						)
+					]
+				),
+				printStmt(variableExpr(new Token('IDENTIFIER', 'DevonshireCream', null, 1)))
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.print('DevonshireCream')).once()
 		})
 	})
 })

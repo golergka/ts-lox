@@ -15,6 +15,23 @@ export function blockStmt(
     }
 }
 
+export interface ClassStmt {
+    type: 'class'
+    name: Token
+    methods: FunctionStmt[]
+}
+
+export function classStmt(
+    name: Token,
+    methods: FunctionStmt[],
+): ClassStmt {
+    return {
+        type: 'class',
+        name,
+        methods,
+    }
+}
+
 export interface ExpressionStmt {
     type: 'expression'
     expression: Expr
@@ -189,6 +206,7 @@ export function continueErrorStmt(
 
 export type Stmt =
     | BlockStmt
+    | ClassStmt
     | ExpressionStmt
     | FunctionStmt
     | IfStmt

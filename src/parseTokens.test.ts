@@ -19,7 +19,8 @@ import {
 	printStmt,
 	varStmt,
 	whileStmt,
-	functionStmt
+	functionStmt,
+	classStmt
 } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './token'
@@ -452,6 +453,40 @@ describe(`parseTokens`, () => {
 				functionStmt(
 					new Token('IDENTIFIER', 'example', 'example', 1),
 					lambdaExpr([], [])
+				)
+			])
+		})
+		
+		it('class Breakfast { cook() { print "Frying"; } }', () => {
+			const tokens: Token[] = [
+				new Token('CLASS', 'class', 'class', 1),
+				new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('IDENTIFIER', 'cook', 'cook', 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('PRINT', 'print', undefined, 1),
+				new Token('STRING', '"Frying"', 'Frying', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				classStmt(
+					new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'cook', 'cook', 1),
+							lambdaExpr([], [
+								printStmt(
+									literalExpr('Frying')
+								)
+							])
+						)
+					]
 				)
 			])
 		})

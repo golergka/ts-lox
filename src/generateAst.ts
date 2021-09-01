@@ -34,6 +34,7 @@ defineAst(
 	'Stmt',
 	[
 		'Block 		: Stmt[] statements',
+		'Class      : Token name, FunctionStmt[] methods',
 		'Expression : Expr expression',
 		'Function   : Token name, LambdaExpr lambda',
 		'If         : Expr condition, Stmt consequent, Stmt|null alternative',

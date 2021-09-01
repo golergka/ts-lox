@@ -161,6 +161,11 @@ export function resolve(
 				define(stmt.name)
 				return true
 			}
+			case 'class': {
+				declare(stmt.name)
+				define(stmt.name)
+				return true
+			}
 			case 'function': {
 				declare(stmt.name)
 				define(stmt.name)

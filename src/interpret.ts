@@ -5,6 +5,7 @@ import { Stmt } from './generated/Stmt'
 import { Token } from './token'
 import { isCallable } from './callable'
 import { LoxFunction } from './loxFunction'
+import { LoxClass } from './loxClass'
 
 export class RuntimeError extends Error {
 	constructor(public readonly token?: Token, message?: string) {
@@ -253,6 +254,12 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 					}
 				}
 			}
+			return null
+		}
+		case 'class': {
+			ctx.environment.define(stmt.name, null)
+			const klass = new LoxClass(stmt.name.lexeme)
+			ctx.environment.assign(stmt.name, klass)
 			return null
 		}
 		case 'function': {

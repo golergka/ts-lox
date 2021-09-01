@@ -15,9 +15,12 @@ import {
 	blockStmt,
 	breakErrorStmt,
 	breakStmt,
+	classStmt,
+	ClassStmt,
 	continueErrorStmt,
 	continueStmt,
 	expressionStmt,
+	FunctionStmt,
 	functionStmt,
 	ifStmt,
 	printStmt,
@@ -407,6 +410,17 @@ export function parseTokens(
 		return functionStmt(name, lambdaExpr(parameters, body))
 	}
 
+	function classDeclaration(): ClassStmt {
+		const name = consume('IDENTIFIER', "Expect class name.")
+		consume('LEFT_BRACE', "Expect '{' before class body.")
+		const methods: FunctionStmt[] = []
+		while (!check('RIGHT_BRACE') && !isAtEnd()) {
+			methods.push(functionDeclaration('method'))
+		}
+		consume('RIGHT_BRACE', "Expect '}' after class body.")
+		return classStmt(name, methods)
+	}
+
 	function variableDeclaration() {
 		const name = consume('IDENTIFIER', 'Expect variable name.')
 		const initializer = match('EQUAL') ? expression() : undefined
@@ -424,6 +438,7 @@ export function parseTokens(
 		loopControls: boolean
 	): Stmt | Expr | null {
 		try {
+			if (match('CLASS')) return classDeclaration()
 			if (check('FUN', 'IDENTIFIER')) {
 				match('FUN')
 				return functionDeclaration('function')
@@ -457,6 +472,7 @@ export function parseTokens(
 				case 'continue':
 				case 'breakError':
 				case 'continueError':
+				case 'function':
 					statements.push(first)
 					break
 				// All possible expressions
