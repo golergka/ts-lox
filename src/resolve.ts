@@ -4,7 +4,7 @@ import { parseError } from './parseError'
 import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 
-type FunctionType = 'function' | 'none'
+type FunctionType = 'function' | 'none' | 'method'
 
 export function resolve(
 	ctx: ParserContext,
@@ -72,9 +72,9 @@ export function resolve(
 		}
 	}
 
-	function resolveLambda(lambda: LambdaExpr) {
+	function resolveFunction(lambda: LambdaExpr, functionType: FunctionType) {
 		const enclosingFunction = currentFunction
-		currentFunction = 'function'
+		currentFunction = functionType
 		beginScope()
 		for (const param of lambda.params) {
 			declare(param)
@@ -122,7 +122,7 @@ export function resolve(
 				return true
 			}
 			case 'lambda': {
-				resolveLambda(expr)
+				resolveFunction(expr, 'function')
 				return true
 			}
 			case 'call': {
@@ -173,12 +173,16 @@ export function resolve(
 			case 'class': {
 				declare(stmt.name)
 				define(stmt.name)
+				for (const method of stmt.methods) {
+					const declaration = 'method'
+					resolveFunction(method.lambda, declaration)
+				}
 				return true
 			}
 			case 'function': {
 				declare(stmt.name)
 				define(stmt.name)
-				resolveLambda(stmt.lambda)
+				resolveFunction(stmt.lambda, 'function')
 				return true
 			}
 			case 'expression': {

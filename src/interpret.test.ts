@@ -8,6 +8,7 @@ import {
 	callExpr,
 	conditionalExpr,
 	Expr,
+	getExpr,
 	groupingExpr,
 	lambdaExpr,
 	literalExpr,
@@ -568,25 +569,51 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 		})
-		
+
 		it('prints a class instance', () => {
 			const stmts = [
 				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
 				varStmt(
 					new Token('IDENTIFIER', 'bagel', null, 1),
-						callExpr(
-							variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
-							new Token('LEFT_PAREN', '(', '(', 1),
-							[]
-						)
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
 				),
-				printStmt(
-					variableExpr(new Token('IDENTIFIER', 'bagel', null, 1))
-				)
+				printStmt(variableExpr(new Token('IDENTIFIER', 'bagel', null, 1)))
 			]
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('instance of Bagel')).once()
+		})
+
+		it('calls a class instance method', () => {
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Bacon', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'eat', null, 1),
+						lambdaExpr([], [printStmt(literalExpr('Crunch crunch crunch!'))])
+					)
+				]),
+				expressionStmt(
+					callExpr(
+						getExpr(
+							callExpr(
+								variableExpr(new Token('IDENTIFIER', 'Bacon', null, 1)),
+								new Token('LEFT_PAREN', '(', '(', 1),
+								[]
+							),
+							new Token('IDENTIFIER', 'eat', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('Crunch crunch crunch!')).once()
 		})
 	})
 })

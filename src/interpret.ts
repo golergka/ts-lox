@@ -279,7 +279,12 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 		}
 		case 'class': {
 			ctx.environment.define(stmt.name, null)
-			const klass = new LoxClass(stmt.name.lexeme)
+			const methods: Map<string, LoxFunction> = new Map()
+			for (const method of stmt.methods) {
+				const func = new LoxFunction(method.lambda, ctx.environment)
+				methods.set(method.name.lexeme, func)
+			}
+			const klass = new LoxClass(stmt.name.lexeme, methods)
 			ctx.environment.assign(stmt.name, klass)
 			return null
 		}
