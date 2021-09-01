@@ -132,6 +132,10 @@ export function resolve(
 				}
 				return true
 			}
+			case 'get': {
+				resolveExpr(expr.object)
+				return true
+			}
 			case 'grouping': {
 				resolveExpr(expr.expression)
 				return true

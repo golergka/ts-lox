@@ -31,6 +31,12 @@ export function rpnExpr(expr: Expr): string {
 				expr.name,
 				'='
 			].join(' ')
+		case 'get':
+			return [
+				rpnExpr(expr.object),
+				expr.name,
+				'get'
+			].join(' ')
 		case 'call':
 			return [
 				...expr.args.map(rpnExpr),

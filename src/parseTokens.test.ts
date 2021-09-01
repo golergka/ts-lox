@@ -2,7 +2,9 @@ import {
 	assignmentExpr,
 	binaryErrorExpr,
 	binaryExpr,
+	callExpr,
 	conditionalExpr,
+	getExpr,
 	lambdaExpr,
 	literalExpr,
 	unaryExpr,
@@ -274,9 +276,7 @@ describe(`parseTokens`, () => {
 				new Token('EOF', '', undefined, 1)
 			]
 			const result = parseTokens(ctx, tokens, false)
-			expect(result).toEqual([
-				printStmt(literalExpr('hello world'))
-			])	
+			expect(result).toEqual([printStmt(literalExpr('hello world'))])
 		})
 
 		it('while (true) print "hello world"', () => {
@@ -295,7 +295,7 @@ describe(`parseTokens`, () => {
 				whileStmt(literalExpr(true), printStmt(literalExpr('hello world')))
 			])
 		})
-		
+
 		it('for (var i = 0; i < 10; i = i + 1) print "hello world"', () => {
 			const tokens: Token[] = [
 				new Token('FOR', 'for', undefined, 1),
@@ -456,7 +456,7 @@ describe(`parseTokens`, () => {
 				)
 			])
 		})
-		
+
 		it('class Breakfast { cook() { print "Frying"; } }', () => {
 			const tokens: Token[] = [
 				new Token('CLASS', 'class', 'class', 1),
@@ -475,19 +475,12 @@ describe(`parseTokens`, () => {
 			]
 			const result = parseTokens(ctx, tokens, false)
 			expect(result).toEqual([
-				classStmt(
-					new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1),
-					[
-						functionStmt(
-							new Token('IDENTIFIER', 'cook', 'cook', 1),
-							lambdaExpr([], [
-								printStmt(
-									literalExpr('Frying')
-								)
-							])
-						)
-					]
-				)
+				classStmt(new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'cook', 'cook', 1),
+						lambdaExpr([], [printStmt(literalExpr('Frying'))])
+					)
+				])
 			])
 		})
 	})
@@ -696,6 +689,57 @@ describe(`parseTokens`, () => {
 			const result = parseTokens(ctx, tokens, true)
 			expect(result).toEqual(
 				lambdaExpr([], [printStmt(literalExpr('hello world'))])
+			)
+		})
+
+		it('someObject.someProperty', () => {
+			const tokens: Token[] = [
+				new Token('IDENTIFIER', 'someObject', null, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'someProperty', null, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(
+				getExpr(
+					variableExpr(new Token('IDENTIFIER', 'someObject', null, 1)),
+					new Token('IDENTIFIER', 'someProperty', null, 1)
+				)
+			)
+		})
+
+		it('egg.scramble(3).with(cheddar)', () => {
+			const tokens: Token[] = [
+				new Token('IDENTIFIER', 'egg', null, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'scramble', null, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('NUMBER', '3', 3, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'with', null, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('IDENTIFIER', 'cheddar', null, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(
+				callExpr(
+					getExpr(
+						callExpr(
+							getExpr(
+								variableExpr(new Token('IDENTIFIER', 'egg', null, 1)),
+								new Token('IDENTIFIER', 'scramble', null, 1)
+							),
+							new Token('RIGHT_PAREN', ')', undefined, 1),
+							[ literalExpr(3) ]
+						),
+						new Token('IDENTIFIER', 'with', null, 1)
+					),
+					new Token('RIGHT_PAREN', ')', undefined, 1),
+					[variableExpr(new Token('IDENTIFIER', 'cheddar', null, 1))]
+				)
 			)
 		})
 	})

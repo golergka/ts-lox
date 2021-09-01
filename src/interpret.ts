@@ -6,6 +6,7 @@ import { Token } from './token'
 import { isCallable } from './callable'
 import { LoxFunction } from './loxFunction'
 import { LoxClass } from './loxClass'
+import { LoxInstance } from './loxInstance'
 
 export class RuntimeError extends Error {
 	constructor(public readonly token?: Token, message?: string) {
@@ -167,6 +168,15 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 				const result = callee.call(ctx, args)
 				return result
 			}
+		}
+		
+		case 'get': {
+			const object = evaluate(ctx, expr.object)
+			if (object instanceof LoxInstance) {
+				return object.get(expr.name)
+			}
+			
+			throw new RuntimeError(expr.name, 'Only instances have properties')
 		}
 		
 		case 'lambda': 

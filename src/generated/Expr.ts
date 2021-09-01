@@ -95,6 +95,23 @@ export function callExpr(
     }
 }
 
+export interface GetExpr {
+    type: 'get'
+    object: Expr
+    name: Token
+}
+
+export function getExpr(
+    object: Expr,
+    name: Token,
+): GetExpr {
+    return {
+        type: 'get',
+        object,
+        name,
+    }
+}
+
 export interface GroupingExpr {
     type: 'grouping'
     expression: Expr
@@ -177,6 +194,7 @@ export type Expr =
     | BinaryExpr
     | BinaryErrorExpr
     | CallExpr
+    | GetExpr
     | GroupingExpr
     | LiteralExpr
     | UnaryExpr

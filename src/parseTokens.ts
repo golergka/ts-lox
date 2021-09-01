@@ -9,7 +9,8 @@ import {
 	unaryExpr,
 	variableExpr,
 	callExpr,
-	lambdaExpr
+	lambdaExpr,
+	getExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -36,6 +37,38 @@ import { TokenType } from './tokenType'
 export interface ParserContext {
 	parserError(line: number, message: string): void
 	parserError(line: number, where: string, message: string): void
+}
+
+function exprOrStmt(input: Expr|Stmt): { type: 'expr', expr: Expr }|{ type: 'stmt', stmt: Stmt } {
+	switch (input.type) {
+		case 'block':
+		case 'expression':
+		case 'function':
+		case 'if':
+		case 'print':
+		case 'return':
+		case 'var':
+		case 'while':
+		case 'break':
+		case 'continue':
+		case 'breakError':
+		case 'continueError':
+		case 'function':
+		case 'class':
+			return { type: 'stmt', stmt: input }
+		case 'conditional':
+		case 'assignment':
+		case 'binary':
+		case 'binaryError':
+		case 'call':
+		case 'grouping':
+		case 'literal':
+		case 'unary':
+		case 'variable':
+		case 'lambda':
+		case 'get':
+			return { type: 'expr', expr: input }
+	}
 }
 
 export function parseTokens(
@@ -124,8 +157,15 @@ export function parseTokens(
 	function call(): Expr {
 		let expr = primary()
 
-		while (match('LEFT_PAREN')) {
-			expr = finishCall(expr)
+		while (true) {
+			if (match('LEFT_PAREN')) {
+				expr = finishCall(expr)
+			} else if (match('DOT')) {
+				const name = consume('IDENTIFIER', 'Expect property name after "."')
+				expr = getExpr(expr, name)
+			} else {
+				break
+			}
 		}
 
 		return expr
@@ -458,35 +498,15 @@ export function parseTokens(
 		const statements: Stmt[] = []
 		if (expressions) {
 			const first = declaration(true, false)
-			switch (first?.type) {
-				// All possible statements
-				case 'block':
-				case 'expression':
-				case 'function':
-				case 'if':
-				case 'print':
-				case 'return':
-				case 'var':
-				case 'while':
-				case 'break':
-				case 'continue':
-				case 'breakError':
-				case 'continueError':
-				case 'function':
-					statements.push(first)
-					break
-				// All possible expressions
-				case 'conditional':
-				case 'assignment':
-				case 'binary':
-				case 'binaryError':
-				case 'call':
-				case 'grouping':
-				case 'literal':
-				case 'unary':
-				case 'variable':
-				case 'lambda':
-					return first
+			if (first !== null) {
+				const firstTyped = exprOrStmt(first)
+				switch (firstTyped.type) {
+					case 'stmt':
+						statements.push(firstTyped.stmt)
+						break
+					case 'expr':
+						return firstTyped.expr
+				}
 			}
 		}
 		while (!isAtEnd()) {
