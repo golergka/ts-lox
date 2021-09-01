@@ -1,4 +1,4 @@
-import { spy, verify } from 'ts-mockito'
+import { anything, spy, verify } from 'ts-mockito'
 import { Callable } from './callable'
 import { createGlobal } from './createGlobal'
 import { Environment } from './environment'
@@ -330,7 +330,9 @@ describe('evaluate', () => {
 			// occurrences of the variable, but for the sake of simplicity,
 			// we'll just use the same one for all of them.
 			const nVarExpr = variableExpr(new Token('IDENTIFIER', 'n', undefined, 1))
-			const fibInnerVarExpr = variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1))
+			const fibInnerVarExpr = variableExpr(
+				new Token('IDENTIFIER', 'fib', undefined, 1)
+			)
 			env.define(
 				new Token('IDENTIFIER', 'fib', undefined, 1),
 				new LoxFunction(
@@ -384,7 +386,9 @@ describe('evaluate', () => {
 			)
 			locals.set(fibInnerVarExpr, 1)
 			locals.set(nVarExpr, 0)
-			const fibOuterVarExpr = variableExpr(new Token('IDENTIFIER', 'fib', undefined, 1))
+			const fibOuterVarExpr = variableExpr(
+				new Token('IDENTIFIER', 'fib', undefined, 1)
+			)
 			locals.set(fibOuterVarExpr, 0)
 			const expr = callExpr(
 				fibOuterVarExpr,
@@ -524,31 +528,65 @@ describe('intepret', () => {
 			expect((fn as LoxFunction).arity).toBe(0)
 		})
 	})
-	
-	describe('class declaration', () => {
-		it('prints a class', () => {
+
+	describe('classes', () => {
+		it('prints a declared class', () => {
 			const stmts = [
-				classStmt(
-					new Token('IDENTIFIER', 'DevonshireCream', null, 1),
-					[
-						functionStmt(
-							new Token('IDENTIFIER', 'serveOn', null, 1),
-							lambdaExpr(
-								[],
-								[
-									returnStmt(
-										new Token('RETURN', 'return', null, 1),
-										literalExpr('Scones')
-									)
-								]
-							)
+				classStmt(new Token('IDENTIFIER', 'DevonshireCream', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'serveOn', null, 1),
+						lambdaExpr(
+							[],
+							[
+								returnStmt(
+									new Token('RETURN', 'return', null, 1),
+									literalExpr('Scones')
+								)
+							]
 						)
-					]
-				),
-				printStmt(variableExpr(new Token('IDENTIFIER', 'DevonshireCream', null, 1)))
+					)
+				]),
+				printStmt(
+					variableExpr(new Token('IDENTIFIER', 'DevonshireCream', null, 1))
+				)
 			]
 			interpret(ctx, stmts)
 			verify(spyCtx.print('DevonshireCream')).once()
+		})
+
+		it('creates a class instance', () => {
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
+				expressionStmt(
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+		})
+		
+		it('prints a class instance', () => {
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
+				varStmt(
+					new Token('IDENTIFIER', 'bagel', null, 1),
+						callExpr(
+							variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
+							new Token('LEFT_PAREN', '(', '(', 1),
+							[]
+						)
+				),
+				printStmt(
+					variableExpr(new Token('IDENTIFIER', 'bagel', null, 1))
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('instance of Bagel')).once()
 		})
 	})
 })
