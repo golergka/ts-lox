@@ -197,7 +197,7 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 		}
 		
 		case 'lambda': 
-			return new LoxFunction(expr, ctx.environment)
+			return new LoxFunction(expr, ctx.environment, false)
 	}
 }
 
@@ -287,7 +287,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			ctx.environment.define(stmt.name, null)
 			const methods: Map<string, LoxFunction> = new Map()
 			for (const method of stmt.methods) {
-				const func = new LoxFunction(method.lambda, ctx.environment)
+				const func = new LoxFunction(method.lambda, ctx.environment, method.name.lexeme === 'init')
 				methods.set(method.name.lexeme, func)
 			}
 			const klass = new LoxClass(stmt.name.lexeme, methods)
@@ -295,7 +295,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			return null
 		}
 		case 'function': {
-			const func = new LoxFunction(stmt.lambda, ctx.environment)
+			const func = new LoxFunction(stmt.lambda, ctx.environment, false)
 			ctx.environment.define(stmt.name, func)
 			return null
 		}

@@ -9,6 +9,6 @@ const clock: Callable = {
 
 export const createGlobal = () => {
     const global = new Environment()
-    global.define(new Token("IDENTIFIER", "clock", "clock", 1), clock)
+    global.define("clock", clock)
     return global
 }

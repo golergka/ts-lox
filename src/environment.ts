@@ -10,10 +10,13 @@ export class Environment {
 
 	public constructor(private readonly enclosing: Environment | null = null) {}
 
-	public define(name: Token|string, value: Object | null | undefined): void {
+	public define(name: Token | string, value: Object | null | undefined): void {
 		const nameString = typeof name === 'string' ? name : name.lexeme
 		if (this.values.has(nameString)) {
-			throw new RuntimeError(typeof name === 'function' ? name : undefined, `Variable ${nameString} already defined`)
+			throw new RuntimeError(
+				typeof name === 'object' ? name : undefined,
+				`Variable ${nameString} already defined`
+			)
 		}
 		this.values.set(nameString, value)
 	}
@@ -42,10 +45,14 @@ export class Environment {
 		}
 	}
 
-	public getAt(distance: number, name: Token): Object | null {
-		const value = this.ancestor(distance).values.get(name.lexeme)
+	public getAt(distance: number, name: Token | string): Object | null {
+		const nameString = typeof name === 'string' ? name : name.lexeme
+		const value = this.ancestor(distance).values.get(nameString)
 		if (value === undefined) {
-			throw new RuntimeError(name, `Undefined variable ${name.lexeme}`)
+			throw new RuntimeError(
+				typeof name === 'object' ? name : undefined,
+				`Undefined variable ${nameString}`
+			)
 		}
 		return value
 	}

@@ -382,7 +382,8 @@ describe('evaluate', () => {
 							)
 						]
 					),
-					env
+					env,
+					false
 				)
 			)
 			locals.set(fibInnerVarExpr, 1)
@@ -702,6 +703,44 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Bagel')).once()
+		})
+		
+		it('returns this from initializer', () => {
+			// class Foo {
+			//   init() {
+			//   }
+			// }
+			// var foo = Foo();
+			// print foo.init(); // prints "instance of Foo"
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Foo', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'init', null, 1),
+						lambdaExpr([], [])
+					)
+				]),
+				varStmt(
+					new Token('IDENTIFIER', 'foo', null, 1),
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'Foo', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				),
+				printStmt(
+					callExpr(
+						getExpr(
+							variableExpr(new Token('IDENTIFIER', 'foo', null, 1)),
+							new Token('IDENTIFIER', 'init', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('instance of Foo')).once()
 		})
 
 		it('calls a function with reference to this', () => {
