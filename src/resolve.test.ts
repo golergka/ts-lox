@@ -1,8 +1,8 @@
+import { thrw } from 'thrw'
 import { mock, instance, verify, anything } from 'ts-mockito'
 import {
 	binaryExpr,
 	callExpr,
-	getExpr,
 	lambdaExpr,
 	literalExpr,
 	thisExpr,
@@ -17,6 +17,7 @@ import {
 	returnStmt,
 	varStmt
 } from './generated/Stmt'
+import { RuntimeError } from './interpret'
 import { ParserContext } from './parseTokens'
 import { resolve } from './resolve'
 import { Token } from './token'
@@ -100,13 +101,11 @@ describe('resolve', () => {
 
 	it('reports an error when this is used in global scope', () => {
 		// print this;
-		const stmts = [
-			printStmt(thisExpr(new Token('THIS', 'this', undefined, 1)))
-		]
+		const stmts = [printStmt(thisExpr(new Token('THIS', 'this', undefined, 1)))]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
 	})
-	
+
 	it('reports an error when this is used in a regular function', () => {
 		// fun notAMethod() {
 		//   print this;
@@ -116,9 +115,7 @@ describe('resolve', () => {
 				new Token('IDENTIFIER', 'notAMethod', undefined, 1),
 				lambdaExpr(
 					[],
-					[
-						printStmt(thisExpr(new Token('IDENTIFIER', 'this', undefined, 1)))
-					]
+					[printStmt(thisExpr(new Token('IDENTIFIER', 'this', undefined, 1)))]
 				)
 			)
 		]
@@ -151,6 +148,50 @@ describe('resolve', () => {
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1)),
 				expressionStmt(variableExpr(new Token('IDENTIFIER', 'y', undefined, 1)))
 			])
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+
+	it(`doesn't report an error for an unused global variable`, () => {
+		// var x = 1;
+		const stmts = [
+			varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1))
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything())).never()
+	})
+	
+	it(`doesn't report an error for an unused class in global scope`, () => {
+		// class Foo {}
+		const stmts = [
+			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [])
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything())).never()
+	})
+
+	it.only('reports an error when return statement is used inside an initializer', () => {
+		// class Foo {
+		//   init() {
+		//     return "something else";
+		//   }
+		// }
+		const stmts = [
+			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [
+				functionStmt(
+					new Token('IDENTIFIER', 'init', undefined, 1),
+					lambdaExpr(
+						[],
+						[
+							returnStmt(
+								new Token('RETURN', 'return', undefined, 1),
+								literalExpr('something else')
+							)
+						]
+					)
+				)
+			]),
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()

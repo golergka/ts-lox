@@ -4,7 +4,7 @@ import { parseError } from './parseError'
 import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 
-type FunctionType = 'function' | 'none' | 'method'
+type FunctionType = 'function' | 'none' | 'method' | 'initializer'
 type ClassType = 'none' | 'class'
 
 export function resolve(
@@ -34,7 +34,8 @@ export function resolve(
 	}
 
 	function endScope() {
-		for (const [_, { defined, used, name }] of peekScope()) {
+		const scope = peekScope()
+		for (const [_, { defined, used, name }] of scope) {
 			if (!defined) {
 				error(name, `${name.lexeme} is declared but never defined`)
 			}
@@ -189,9 +190,10 @@ export function resolve(
 				declare(stmt.name)
 				define(stmt.name)
 				beginScope()
-				peekScope().set('this', { defined: true, used: false, name: stmt.name })
+				peekScope().set('this', { defined: true, used: true, name: stmt.name })
 				for (const method of stmt.methods) {
-					const declaration = 'method'
+					const declaration =
+						method.name.lexeme === 'init' ? 'initializer' : 'method'
 					resolveFunction(method.lambda, declaration)
 				}
 				endScope()
@@ -225,6 +227,9 @@ export function resolve(
 					error(stmt.keyword, 'Cannot return from top-level code.')
 				}
 				if (stmt.value != null) {
+					if (currentFunction === 'initializer') {
+						error(stmt.keyword, 'Cannot return a value from an initializer.')
+					}
 					resolveExpr(stmt.value)
 				}
 				return true

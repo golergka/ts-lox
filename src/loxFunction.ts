@@ -25,6 +25,9 @@ export class LoxFunction implements Callable {
 			}
 		} catch (e) {
 			if (e instanceof Return) {
+				if (this.isInitializer) {
+					return ctx.environment.getAt(1, 'this')
+				}
 				return e.value
 			} else {
 				throw e
