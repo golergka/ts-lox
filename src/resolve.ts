@@ -5,6 +5,7 @@ import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 
 type FunctionType = 'function' | 'none' | 'method'
+type ClassType = 'none' | 'class'
 
 export function resolve(
 	ctx: ParserContext,
@@ -20,6 +21,7 @@ export function resolve(
 	>[] = []
 	const locals: Map<Expr, number> = new Map()
 	let currentFunction: FunctionType = 'none'
+	let currentClass: ClassType = 'none'
 
 	const error = parseError(ctx)
 
@@ -145,7 +147,11 @@ export function resolve(
 				return true
 			}
 			case 'this': {
-				resolveLocal(expr, expr.keyword)
+				if (currentClass === 'none') {
+					error(expr.keyword, 'Cannot use `this` outside of a class')
+				} else {
+					resolveLocal(expr, expr.keyword)
+				}
 				return true
 			}
 			case 'grouping': {
@@ -178,6 +184,8 @@ export function resolve(
 				return true
 			}
 			case 'class': {
+				const enclosingClass = currentClass
+				currentClass = 'class'
 				declare(stmt.name)
 				define(stmt.name)
 				beginScope()
@@ -187,6 +195,7 @@ export function resolve(
 					resolveFunction(method.lambda, declaration)
 				}
 				endScope()
+				currentClass = enclosingClass
 				return true
 			}
 			case 'function': {

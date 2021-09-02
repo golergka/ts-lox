@@ -5,6 +5,7 @@ import {
 	getExpr,
 	lambdaExpr,
 	literalExpr,
+	thisExpr,
 	variableExpr
 } from './generated/Expr'
 import {
@@ -97,6 +98,34 @@ describe('resolve', () => {
 		verify(mockedCtx.parserError(anything(), anything(), anything())).twice()
 	})
 
+	it('reports an error when this is used in global scope', () => {
+		// print this;
+		const stmts = [
+			printStmt(thisExpr(new Token('THIS', 'this', undefined, 1)))
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+	
+	it('reports an error when this is used in a regular function', () => {
+		// fun notAMethod() {
+		//   print this;
+		// }
+		const stmts = [
+			functionStmt(
+				new Token('IDENTIFIER', 'notAMethod', undefined, 1),
+				lambdaExpr(
+					[],
+					[
+						printStmt(thisExpr(new Token('IDENTIFIER', 'this', undefined, 1)))
+					]
+				)
+			)
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+
 	it('reports an error when variable is accessed in initializer', () => {
 		// {
 		//   var x = x;
@@ -154,7 +183,9 @@ describe('resolve', () => {
 		//     return localFunction;
 		//   }
 		// }
-		const localFunctionExpr = variableExpr(new Token('IDENTIFIER', 'localFunction', null, 1))
+		const localFunctionExpr = variableExpr(
+			new Token('IDENTIFIER', 'localFunction', null, 1)
+		)
 		const stmts = [
 			classStmt(new Token('IDENTIFIER', 'Thing', null, 1), [
 				functionStmt(
