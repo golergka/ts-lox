@@ -11,7 +11,8 @@ import {
 	callExpr,
 	lambdaExpr,
 	getExpr,
-	setExpr
+	setExpr,
+	thisExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -69,6 +70,7 @@ function exprOrStmt(input: Expr|Stmt): { type: 'expr', expr: Expr }|{ type: 'stm
 		case 'lambda':
 		case 'get':
 		case 'set':
+		case 'this':
 			return { type: 'expr', expr: input }
 	}
 }
@@ -132,6 +134,7 @@ export function parseTokens(
 		if (match('TRUE')) return literalExpr(true)
 		if (match('NIL')) return literalExpr(null)
 		if (match('NUMBER', 'STRING')) return literalExpr(previous().literal)
+		if (match('THIS')) return thisExpr(previous())
 		if (match('IDENTIFIER')) return variableExpr(previous())
 		if (match('LEFT_PAREN')) {
 			const expr = expression()

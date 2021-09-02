@@ -10,11 +10,12 @@ export class Environment {
 
 	public constructor(private readonly enclosing: Environment | null = null) {}
 
-	public define(name: Token, value: Object | null | undefined): void {
-		if (this.values.has(name.lexeme)) {
-			throw new RuntimeError(name, `Variable ${name.lexeme} already defined`)
+	public define(name: Token|string, value: Object | null | undefined): void {
+		const nameString = typeof name === 'string' ? name : name.lexeme
+		if (this.values.has(nameString)) {
+			throw new RuntimeError(typeof name === 'function' ? name : undefined, `Variable ${nameString} already defined`)
 		}
-		this.values.set(name.lexeme, value)
+		this.values.set(nameString, value)
 	}
 
 	public get(name: Token): Object | null {

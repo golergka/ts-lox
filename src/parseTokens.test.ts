@@ -8,6 +8,7 @@ import {
 	lambdaExpr,
 	literalExpr,
 	setExpr,
+	thisExpr,
 	unaryExpr,
 	variableExpr
 } from './generated/Expr'
@@ -771,6 +772,15 @@ describe(`parseTokens`, () => {
 					variableExpr(new Token('IDENTIFIER', 'ham', null, 1))
 				)
 			)
+		})
+
+		it('this', () => {
+			const tokens: Token[] = [
+				new Token('THIS', 'this', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(thisExpr(new Token('THIS', 'this', undefined, 1)))
 		})
 	})
 })

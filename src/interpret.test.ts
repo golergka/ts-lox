@@ -532,6 +532,12 @@ describe('intepret', () => {
 
 	describe('classes', () => {
 		it('prints a declared class', () => {
+			// class DevonshireCream {
+			//   serveOn() {
+			//     return "Scones";
+			//   }
+			// }
+			// print DevonshireCream; // "Scones"
 			const stmts = [
 				classStmt(new Token('IDENTIFIER', 'DevonshireCream', null, 1), [
 					functionStmt(
@@ -556,6 +562,9 @@ describe('intepret', () => {
 		})
 
 		it('creates a class instance', () => {
+			// class Bagel {
+			// }
+			// Bagel(); // creates Bagel instance
 			const stmts = [
 				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
 				expressionStmt(
@@ -571,6 +580,10 @@ describe('intepret', () => {
 		})
 
 		it('prints a class instance', () => {
+			// class Bagel {
+			// }
+			// var bagel = Bagel();
+			// print bagel; // prints Bagel instance
 			const stmts = [
 				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
 				varStmt(
@@ -589,6 +602,12 @@ describe('intepret', () => {
 		})
 
 		it('calls a class instance method', () => {
+			// class Bacon {
+			//   eat() {
+			//     print "Crunch crunch crunch!";
+			//   }
+			// }
+			// Bacon().eat(); // prints "Crunch crunch crunch!"
 			const stmts = [
 				classStmt(new Token('IDENTIFIER', 'Bacon', null, 1), [
 					functionStmt(
@@ -614,6 +633,110 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Crunch crunch crunch!')).once()
+		})
+
+		it('calls a class instance method with reference to this', () => {
+			// class Egotist {
+			//   speak() {
+			//     print this;
+			//   }
+			// }
+			// var method = Egotist().speak;
+			// method(); // prints "instance of Egotist"
+			const thisExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Egotist', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'speak', null, 1),
+						lambdaExpr([], [printStmt(thisExpr)])
+					)
+				]),
+				varStmt(
+					new Token('IDENTIFIER', 'method', null, 1),
+					getExpr(
+						callExpr(
+							variableExpr(new Token('IDENTIFIER', 'Egotist', null, 1)),
+							new Token('LEFT_PAREN', '(', '(', 1),
+							[]
+						),
+						new Token('IDENTIFIER', 'speak', null, 1)
+					)
+				),
+				expressionStmt(
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'method', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			// Emulating resolver for thisExpr
+			ctx.locals.set(thisExpr, 1)
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('instance of Egotist')).once()
+		})
+
+		it('calls a function with reference to this', () => {
+			// class Thing {
+			//   getCallback() {
+			//     fun localFunction() {
+			//       print this;
+			//     }
+			//     return localFunction;
+			//   }
+			// }
+			// var callback = Thing().getCallback();
+			// callback();
+			const localFunctionExpr = variableExpr(new Token('IDENTIFIER', 'localFunction', null, 1))
+			const thisExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Thing', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'getCallback', null, 1),
+						lambdaExpr(
+							[],
+							[
+								functionStmt(
+									new Token('IDENTIFIER', 'localFunction', null, 1),
+									lambdaExpr([], [printStmt(thisExpr)])
+								),
+								returnStmt(
+									new Token('RETURN', 'return', null, 1),
+									localFunctionExpr
+								)
+							]
+						)
+					)
+				]),
+				varStmt(
+					new Token('IDENTIFIER', 'callback', null, 1),
+					callExpr(
+						getExpr(
+							callExpr(
+								variableExpr(new Token('IDENTIFIER', 'Thing', null, 1)),
+								new Token('LEFT_PAREN', '(', '(', 1),
+								[]
+							),
+							new Token('IDENTIFIER', 'getCallback', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				),
+				expressionStmt(
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'callback', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			ctx.locals.set(thisExpr, 2) // Emulating resolver for thisExpr
+			ctx.locals.set(localFunctionExpr, 0) // Emulating resolver for localFunctionExpr
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('instance of Thing')).once()
 		})
 	})
 })

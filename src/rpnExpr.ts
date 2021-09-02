@@ -52,5 +52,7 @@ export function rpnExpr(expr: Expr): string {
 			].join(' ')
 		case 'lambda':
 			return '<anonymous function>'
+		case 'this':
+			return 'this'
 	}
 }

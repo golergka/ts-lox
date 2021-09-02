@@ -32,6 +32,8 @@ export function printExpr(expr: Expr): string {
 			return `(set ${printExpr(expr.object)} ${expr.name} ${printExpr(expr.value)})`
 		case 'lambda':
 			return '<anonymous function>'
+		case 'this':
+			return 'this'
 	}
 }
 

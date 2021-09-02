@@ -1,6 +1,21 @@
 import { mock, instance, verify, anything } from 'ts-mockito'
-import { binaryExpr, literalExpr, variableExpr } from './generated/Expr'
-import { blockStmt, expressionStmt, varStmt } from './generated/Stmt'
+import {
+	binaryExpr,
+	callExpr,
+	getExpr,
+	lambdaExpr,
+	literalExpr,
+	variableExpr
+} from './generated/Expr'
+import {
+	blockStmt,
+	classStmt,
+	expressionStmt,
+	functionStmt,
+	printStmt,
+	returnStmt,
+	varStmt
+} from './generated/Stmt'
 import { ParserContext } from './parseTokens'
 import { resolve } from './resolve'
 import { Token } from './token'
@@ -15,6 +30,7 @@ describe('resolve', () => {
 	})
 
 	it('returns no errors on simple expression', () => {
+		// 1 + 2
 		const expr = binaryExpr(
 			literalExpr(1),
 			new Token('PLUS', '+', undefined, 1),
@@ -25,6 +41,8 @@ describe('resolve', () => {
 	})
 
 	it(`doesn't build locals for variable declaration in global scope`, () => {
+		// var x = 1;
+		// x;
 		const stmts = [
 			varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1)),
 			expressionStmt(variableExpr(new Token('IDENTIFIER', 'x', undefined, 1)))
@@ -34,6 +52,8 @@ describe('resolve', () => {
 	})
 
 	it('builds locals for block-scoped variable declaration', () => {
+		// var x = 1;
+		// x;
 		const varExpr = variableExpr(new Token('IDENTIFIER', 'x', undefined, 1))
 		const stmts = [
 			blockStmt([
@@ -46,6 +66,10 @@ describe('resolve', () => {
 	})
 
 	it('builds locals for variable one block deeper', () => {
+		// {
+		//   var x = 1;
+		//   x;
+		// }
 		const varExpr = variableExpr(new Token('IDENTIFIER', 'x', undefined, 1))
 		const stmts = [
 			blockStmt([
@@ -58,8 +82,10 @@ describe('resolve', () => {
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(varExpr)).toBe(1)
 	})
-    
+
 	it('reports an error when a variable with the same name is declared twice', () => {
+		// var x = 1;
+		// var x = 1;
 		const stmts = [
 			blockStmt([
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1)),
@@ -67,11 +93,14 @@ describe('resolve', () => {
 			])
 		]
 		resolve(ctx, stmts)
-        // One error for second declaration, another for not using the variable
+		// One error for second declaration, another for not using the variable
 		verify(mockedCtx.parserError(anything(), anything(), anything())).twice()
 	})
 
 	it('reports an error when variable is accessed in initializer', () => {
+		// {
+		//   var x = x;
+		// }
 		const stmts = [
 			blockStmt([
 				varStmt(
@@ -85,6 +114,9 @@ describe('resolve', () => {
 	})
 
 	it('reports an error when a variable is never used', () => {
+		// {
+		//   var x = 1;
+		// }
 		const stmts = [
 			blockStmt([
 				varStmt(new Token('IDENTIFIER', 'x', undefined, 1), literalExpr(1)),
@@ -93,5 +125,57 @@ describe('resolve', () => {
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+
+	it('builds locals for this inside a class method', () => {
+		// class Egotist {
+		//   speak() {
+		//     print this;
+		//   }
+		// }
+		const varExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
+		const stmts = [
+			classStmt(new Token('IDENTIFIER', 'Egotist', null, 1), [
+				functionStmt(
+					new Token('IDENTIFIER', 'speak', null, 1),
+					lambdaExpr([], [printStmt(varExpr)])
+				)
+			])
+		]
+		const { locals } = resolve(ctx, stmts)
+		expect(locals.get(varExpr)).toBe(1)
+	})
+
+	it('builds locals for a function definition', () => {
+		// class Thing {
+		//   getCallback() {
+		//     fun localFunction() {
+		//     }
+		//     return localFunction;
+		//   }
+		// }
+		const localFunctionExpr = variableExpr(new Token('IDENTIFIER', 'localFunction', null, 1))
+		const stmts = [
+			classStmt(new Token('IDENTIFIER', 'Thing', null, 1), [
+				functionStmt(
+					new Token('IDENTIFIER', 'getCallback', null, 1),
+					lambdaExpr(
+						[],
+						[
+							functionStmt(
+								new Token('IDENTIFIER', 'localFunction', null, 1),
+								lambdaExpr([], [])
+							),
+							returnStmt(
+								new Token('RETURN', 'return', null, 1),
+								localFunctionExpr
+							)
+						]
+					)
+				)
+			])
+		]
+		const { locals } = resolve(ctx, stmts)
+		expect(locals.get(localFunctionExpr)).toBe(0)
 	})
 })

@@ -2,6 +2,7 @@ import { Callable } from './callable'
 import { Environment } from './environment'
 import { LambdaExpr } from './generated/Expr'
 import { executeBlock, InterpreterContext, Return } from './interpret'
+import { LoxInstance } from './loxInstance'
 
 export class LoxFunction implements Callable {
 	public constructor(
@@ -32,5 +33,11 @@ export class LoxFunction implements Callable {
     
     public get arity(): number {
         return this.declaration.params.length
+    }
+
+    public bind(instance: LoxInstance): Object | null {
+        const environment = new Environment(this.closure)
+        environment.define('this', instance)
+        return new LoxFunction(this.declaration, environment)
     }
 }

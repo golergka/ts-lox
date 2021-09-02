@@ -160,6 +160,20 @@ export function setExpr(
     }
 }
 
+export interface ThisExpr {
+    type: 'this'
+    keyword: Token
+}
+
+export function thisExpr(
+    keyword: Token,
+): ThisExpr {
+    return {
+        type: 'this',
+        keyword,
+    }
+}
+
 export interface UnaryExpr {
     type: 'unary'
     operator: Token
@@ -218,6 +232,7 @@ export type Expr =
     | GroupingExpr
     | LiteralExpr
     | SetExpr
+    | ThisExpr
     | UnaryExpr
     | VariableExpr
     | LambdaExpr

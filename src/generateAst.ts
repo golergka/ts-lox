@@ -21,6 +21,7 @@ defineAst(
 		'Grouping    : Expr expression',
 		'Literal     : Object|null value',
 		'Set         : Expr object, Token name, Expr value',
+		'This        : Token keyword',
 		'Unary       : Token operator, Expr right',
 		'Variable    : Token name',
 		'Lambda      : Token[] params, Stmt[] body'

@@ -10,11 +10,14 @@ export function resolve(
 	ctx: ParserContext,
 	stmts: Stmt[] | Expr
 ): { locals: Map<Expr, number> } {
-	const scopes: Map<string, {
-		readonly name: Token
-		defined: boolean
-		used: boolean
-	}>[] = []
+	const scopes: Map<
+		string,
+		{
+			readonly name: Token
+			defined: boolean
+			used: boolean
+		}
+	>[] = []
 	const locals: Map<Expr, number> = new Map()
 	let currentFunction: FunctionType = 'none'
 
@@ -141,6 +144,10 @@ export function resolve(
 				resolveExpr(expr.object)
 				return true
 			}
+			case 'this': {
+				resolveLocal(expr, expr.keyword)
+				return true
+			}
 			case 'grouping': {
 				resolveExpr(expr.expression)
 				return true
@@ -173,10 +180,13 @@ export function resolve(
 			case 'class': {
 				declare(stmt.name)
 				define(stmt.name)
+				beginScope()
+				peekScope().set('this', { defined: true, used: false, name: stmt.name })
 				for (const method of stmt.methods) {
 					const declaration = 'method'
 					resolveFunction(method.lambda, declaration)
 				}
+				endScope()
 				return true
 			}
 			case 'function': {

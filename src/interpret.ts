@@ -41,6 +41,15 @@ function checkNumberOperand(
 }
 
 export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
+	function lookUpVariable(name: Token, expr: Expr): Object | null {
+		const distance = ctx.locals.get(expr)
+		if (distance !== undefined) {
+			return ctx.environment.getAt(distance, name)
+		} else {
+			return ctx.globals.get(name)
+		}
+	}
+
 	switch (expr.type) {
 		case 'literal':
 			return expr.value
@@ -131,14 +140,11 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 			throw new RuntimeError(expr.operator, `Compilation error`)
 		}
 
-		case 'variable': {
-			const distance = ctx.locals.get(expr)
-			if (distance !== undefined) {
-				return ctx.environment.getAt(distance, expr.name)
-			} else {
-				return ctx.globals.get(expr.name)
-			}
-		}
+		case 'variable':
+			return lookUpVariable(expr.name, expr)
+		
+		case 'this':
+			return lookUpVariable(expr.keyword, expr)
 
 		case 'assignment': {
 			const value = evaluate(ctx, expr.value)
