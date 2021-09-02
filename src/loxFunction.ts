@@ -35,7 +35,7 @@ export class LoxFunction implements Callable {
         return this.declaration.params.length
     }
 
-    public bind(instance: LoxInstance): Object | null {
+    public bind(instance: LoxInstance): LoxFunction {
         const environment = new Environment(this.closure)
         environment.define('this', instance)
         return new LoxFunction(this.declaration, environment)

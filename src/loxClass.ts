@@ -11,11 +11,16 @@ export class LoxClass implements Callable {
 
 	call(ctx: InterpreterContext, args: (Object | null)[]): Object | null {
 		const instance = new LoxInstance(this)
+		const initializer = this.findMethod("init")
+		if (initializer !== undefined) {
+			initializer.bind(instance).call(ctx, args)
+		}
 		return instance
 	}
 
 	get arity(): number {
-		return 0
+		const initializer = this.findMethod("init")
+		return initializer?.arity || 0
 	}
 
 	public toString(): string {

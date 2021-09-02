@@ -676,6 +676,33 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('instance of Egotist')).once()
 		})
+		
+		it('calls an init method when constructing an instance', () => {
+			// class Bagel {
+			//   init() {
+			//     print "Bagel";
+			//   }
+			// }
+			// Bagel(); // prints "Bagel"
+			const stmts = [
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [
+					functionStmt(
+						new Token('IDENTIFIER', 'init', null, 1),
+						lambdaExpr([], [printStmt(literalExpr('Bagel'))])
+					)
+				]),
+				expressionStmt(
+					callExpr(
+						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('Bagel')).once()
+		})
 
 		it('calls a function with reference to this', () => {
 			// class Thing {
