@@ -542,6 +542,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'DevonshireCream', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'serveOn', null, 1),
@@ -571,7 +572,7 @@ describe('intepret', () => {
 			// }
 			// Bagel(); // creates Bagel instance
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [], []),
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), null, [], []),
 				expressionStmt(
 					callExpr(
 						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
@@ -590,7 +591,7 @@ describe('intepret', () => {
 			// var bagel = Bagel();
 			// print bagel; // prints Bagel instance
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [], []),
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), null, [], []),
 				varStmt(
 					new Token('IDENTIFIER', 'bagel', null, 1),
 					callExpr(
@@ -616,6 +617,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Bacon', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'eat', null, 1),
@@ -656,6 +658,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Egotist', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'speak', null, 1),
@@ -700,6 +703,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Bagel', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'init', null, 1),
@@ -731,6 +735,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Foo', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'init', null, 1),
@@ -781,6 +786,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Thing', null, 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'getCallback', null, 1),
@@ -841,6 +847,7 @@ describe('intepret', () => {
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Foo', null, 1),
+					null,
 					[
 					],
 					[
@@ -864,6 +871,26 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('bar')).once()
+		})
+		
+		it('reports an error when superclass is not a class', () => {
+			// var bar = 123;
+			// class Foo > bar {
+			// }
+			const stmts = [
+				varStmt(
+					new Token('IDENTIFIER', 'bar', null, 1),
+					literalExpr(123)
+				),
+				classStmt(
+					new Token('IDENTIFIER', 'Foo', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'bar', null, 1)),
+					[],
+					[]
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).once()
 		})
 	})
 })

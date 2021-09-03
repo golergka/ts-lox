@@ -189,6 +189,12 @@ export function resolve(
 				currentClass = 'class'
 				declare(stmt.name)
 				define(stmt.name)
+				if (stmt.superclass !== null) {
+					if (stmt.name.lexeme === stmt.superclass.name.lexeme) {
+						error(stmt.superclass.name, 'A class cannot inherit from itself')
+					}
+					resolveLocal(stmt.superclass, stmt.superclass.name)
+				}
 				beginScope()
 				peekScope().set('this', { defined: true, used: true, name: stmt.name })
 				for (const method of stmt.methods) {

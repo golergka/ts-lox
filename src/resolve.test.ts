@@ -1,8 +1,6 @@
-import { thrw } from 'thrw'
 import { mock, instance, verify, anything } from 'ts-mockito'
 import {
 	binaryExpr,
-	callExpr,
 	lambdaExpr,
 	literalExpr,
 	thisExpr,
@@ -17,7 +15,6 @@ import {
 	returnStmt,
 	varStmt
 } from './generated/Stmt'
-import { RuntimeError } from './interpret'
 import { ParserContext } from './parseTokens'
 import { resolve } from './resolve'
 import { Token } from './token'
@@ -161,11 +158,11 @@ describe('resolve', () => {
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything())).never()
 	})
-	
+
 	it(`doesn't report an error for an unused class in global scope`, () => {
 		// class Foo {}
 		const stmts = [
-			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [], [])
+			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), null, [], [])
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything())).never()
@@ -178,20 +175,25 @@ describe('resolve', () => {
 		//   }
 		// }
 		const stmts = [
-			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [
-				functionStmt(
-					new Token('IDENTIFIER', 'init', undefined, 1),
-					lambdaExpr(
-						[],
-						[
-							returnStmt(
-								new Token('RETURN', 'return', undefined, 1),
-								literalExpr('something else')
-							)
-						]
+			classStmt(
+				new Token('IDENTIFIER', 'Foo', undefined, 1),
+				null,
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'init', undefined, 1),
+						lambdaExpr(
+							[],
+							[
+								returnStmt(
+									new Token('RETURN', 'return', undefined, 1),
+									literalExpr('something else')
+								)
+							]
+						)
 					)
-				)
-			], []),
+				],
+				[]
+			)
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
@@ -205,12 +207,17 @@ describe('resolve', () => {
 		// }
 		const varExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
 		const stmts = [
-			classStmt(new Token('IDENTIFIER', 'Egotist', null, 1), [
-				functionStmt(
-					new Token('IDENTIFIER', 'speak', null, 1),
-					lambdaExpr([], [printStmt(varExpr)])
-				)
-			], [])
+			classStmt(
+				new Token('IDENTIFIER', 'Egotist', null, 1),
+				null,
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'speak', null, 1),
+						lambdaExpr([], [printStmt(varExpr)])
+					)
+				],
+				[]
+			)
 		]
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(varExpr)).toBe(1)
@@ -228,26 +235,45 @@ describe('resolve', () => {
 			new Token('IDENTIFIER', 'localFunction', null, 1)
 		)
 		const stmts = [
-			classStmt(new Token('IDENTIFIER', 'Thing', null, 1), [
-				functionStmt(
-					new Token('IDENTIFIER', 'getCallback', null, 1),
-					lambdaExpr(
-						[],
-						[
-							functionStmt(
-								new Token('IDENTIFIER', 'localFunction', null, 1),
-								lambdaExpr([], [])
-							),
-							returnStmt(
-								new Token('RETURN', 'return', null, 1),
-								localFunctionExpr
-							)
-						]
+			classStmt(
+				new Token('IDENTIFIER', 'Thing', null, 1),
+				null,
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'getCallback', null, 1),
+						lambdaExpr(
+							[],
+							[
+								functionStmt(
+									new Token('IDENTIFIER', 'localFunction', null, 1),
+									lambdaExpr([], [])
+								),
+								returnStmt(
+									new Token('RETURN', 'return', null, 1),
+									localFunctionExpr
+								)
+							]
+						)
 					)
-				)
-			], [])
+				],
+				[]
+			)
 		]
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(localFunctionExpr)).toBe(0)
+	})
+	
+	it('reports an error when a class is used as it\'s own superclass', () => {
+		// class Oops < Oops {}
+		const stmts = [
+			classStmt(
+				new Token('IDENTIFIER', 'Oops', null, 1),
+				variableExpr(new Token('IDENTIFIER', 'Oops', null, 1)),
+				[],
+				[]
+			)
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
 	})
 })

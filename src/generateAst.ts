@@ -37,7 +37,7 @@ defineAst(
 	'Stmt',
 	[
 		'Block 		: Stmt[] statements',
-		'Class      : Token name, FunctionStmt[] methods, FunctionStmt[] staticMethods',
+		'Class      : Token name, VariableExpr|null superclass, FunctionStmt[] methods, FunctionStmt[] staticMethods',
 		'Expression : Expr expression',
 		'Function   : Token name, LambdaExpr lambda',
 		'If         : Expr condition, Stmt consequent, Stmt|null alternative',
@@ -51,7 +51,7 @@ defineAst(
 		'ContinueError : Token body'
 	],
 	[
-		[['Expr', 'LambdaExpr'], './Expr'],
+		[['Expr', 'LambdaExpr', 'VariableExpr'], './Expr'],
 		[['Token'], '../Token']
 	]
 )

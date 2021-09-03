@@ -284,6 +284,13 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 			return null
 		}
 		case 'class': {
+			let superclass = null
+			if (stmt.superclass !== null) {
+				superclass = evaluate(ctx, stmt.superclass)
+				if (!(superclass instanceof LoxClass)) {
+					throw new RuntimeError(stmt.superclass.name, 'Superclass must be a class')
+				}
+			}
 			ctx.environment.define(stmt.name, null)
 			const methods: Map<string, LoxFunction> = new Map()
 			const staticMethods: Map<string, LoxFunction> = new Map()
@@ -299,7 +306,7 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 					new LoxFunction(staticMethod.lambda, ctx.environment, false)
 				)
 			}
-			const klass = new LoxClass(stmt.name.lexeme, methods, staticMethods)
+			const klass = new LoxClass(stmt.name.lexeme, superclass, methods, staticMethods)
 			ctx.environment.assign(stmt.name, klass)
 			return null
 		}
@@ -333,7 +340,8 @@ export function interpret(ctx: InterpreterContext, statements: Stmt[]) {
 	} catch (e) {
 		if (e instanceof RuntimeError) {
 			ctx.runtimeError(e)
+		} else {
+			throw e
 		}
-		throw e
 	}
 }

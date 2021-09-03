@@ -480,6 +480,7 @@ describe(`parseTokens`, () => {
 			expect(result).toEqual([
 				classStmt(
 					new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1),
+					null,
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'cook', 'cook', 1),
@@ -515,6 +516,7 @@ describe(`parseTokens`, () => {
 			expect(result).toEqual([
 				classStmt(
 					new Token('IDENTIFIER', 'Math', 'Math', 1),
+					null,
 					[],
 					[
 						functionStmt(
@@ -534,6 +536,27 @@ describe(`parseTokens`, () => {
 							)
 						)
 					]
+				)
+			])
+		})
+		
+		it('class BostonCream < Doughnut { }', () => {
+			const tokens: Token[] = [
+				new Token('CLASS', 'class', 'class', 1),
+				new Token('IDENTIFIER', 'BostonCream', 'BostonCream', 1),
+				new Token('LESS', '<', undefined, 1),
+				new Token('IDENTIFIER', 'Doughnut', 'Doughnut', 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				classStmt(
+					new Token('IDENTIFIER', 'BostonCream', 'BostonCream', 1),
+					variableExpr(new Token('IDENTIFIER', 'Doughnut', 'Doughnut', 1)),
+					[],
+					[]
 				)
 			])
 		})

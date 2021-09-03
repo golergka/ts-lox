@@ -8,6 +8,7 @@ let metaKlass: LoxClass
 export class LoxClass extends LoxInstance implements Callable {
 	public constructor(
 		public readonly name: string,
+		public readonly superclass: LoxClass|null,
 		public readonly methods: Map<string, LoxFunction>,
 		public readonly staticMethods: Map<string, LoxFunction>
 	) {
@@ -40,4 +41,4 @@ export class LoxClass extends LoxInstance implements Callable {
     }
 }
 
-metaKlass = new LoxClass("Class", new Map(), new Map())
+metaKlass = new LoxClass("Class", null, new Map(), new Map())

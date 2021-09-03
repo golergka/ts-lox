@@ -1,4 +1,4 @@
-import { Expr, LambdaExpr } from './Expr'
+import { Expr, LambdaExpr, VariableExpr } from './Expr'
 import { Token } from '../Token'
 
 export interface BlockStmt {
@@ -18,18 +18,21 @@ export function blockStmt(
 export interface ClassStmt {
     type: 'class'
     name: Token
+    superclass: VariableExpr|null
     methods: FunctionStmt[]
     staticMethods: FunctionStmt[]
 }
 
 export function classStmt(
     name: Token,
+    superclass: VariableExpr|null,
     methods: FunctionStmt[],
     staticMethods: FunctionStmt[],
 ): ClassStmt {
     return {
         type: 'class',
         name,
+        superclass,
         methods,
         staticMethods,
     }

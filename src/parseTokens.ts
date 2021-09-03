@@ -461,6 +461,11 @@ export function parseTokens(
 
 	function classDeclaration(): ClassStmt {
 		const name = consume('IDENTIFIER', "Expect class name.")
+		let superclass = null
+		if (match('LESS')) {
+			consume('IDENTIFIER', "Expect superclass name.")
+			superclass = variableExpr(previous())
+		}
 		consume('LEFT_BRACE', "Expect '{' before class body.")
 		const methods: FunctionStmt[] = []
 		const staticMethods: FunctionStmt[] = []
@@ -472,7 +477,7 @@ export function parseTokens(
 			}
 		}
 		consume('RIGHT_BRACE', "Expect '}' after class body.")
-		return classStmt(name, methods, staticMethods)
+		return classStmt(name, superclass, methods, staticMethods)
 	}
 
 	function variableDeclaration() {
