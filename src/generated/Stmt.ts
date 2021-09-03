@@ -19,16 +19,19 @@ export interface ClassStmt {
     type: 'class'
     name: Token
     methods: FunctionStmt[]
+    staticMethods: FunctionStmt[]
 }
 
 export function classStmt(
     name: Token,
     methods: FunctionStmt[],
+    staticMethods: FunctionStmt[],
 ): ClassStmt {
     return {
         type: 'class',
         name,
         methods,
+        staticMethods,
     }
 }
 

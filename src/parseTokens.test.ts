@@ -24,7 +24,8 @@ import {
 	varStmt,
 	whileStmt,
 	functionStmt,
-	classStmt
+	classStmt,
+	returnStmt
 } from './generated/Stmt'
 import { ParserContext, parseTokens } from './parseTokens'
 import { Token } from './token'
@@ -477,12 +478,63 @@ describe(`parseTokens`, () => {
 			]
 			const result = parseTokens(ctx, tokens, false)
 			expect(result).toEqual([
-				classStmt(new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'cook', 'cook', 1),
-						lambdaExpr([], [printStmt(literalExpr('Frying'))])
-					)
-				])
+				classStmt(
+					new Token('IDENTIFIER', 'Breakfast', 'Breakfast', 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'cook', 'cook', 1),
+							lambdaExpr([], [printStmt(literalExpr('Frying'))])
+						)
+					],
+					[]
+				)
+			])
+		})
+
+		it('class Math { class square(n) { return n * n } }', () => {
+			const tokens: Token[] = [
+				new Token('CLASS', 'class', 'class', 1),
+				new Token('IDENTIFIER', 'Math', 'Math', 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('CLASS', 'class', 'class', 1),
+				new Token('IDENTIFIER', 'square', 'square', 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('IDENTIFIER', 'n', 'n', 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('LEFT_BRACE', '{', undefined, 1),
+				new Token('RETURN', 'return', undefined, 1),
+				new Token('IDENTIFIER', 'n', 'n', 1),
+				new Token('STAR', '*', undefined, 1),
+				new Token('IDENTIFIER', 'n', 'n', 1),
+				new Token('SEMICOLON', ';', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('RIGHT_BRACE', '}', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, false)
+			expect(result).toEqual([
+				classStmt(
+					new Token('IDENTIFIER', 'Math', 'Math', 1),
+					[],
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'square', 'square', 1),
+							lambdaExpr(
+								[new Token('IDENTIFIER', 'n', 'n', 1)],
+								[
+									returnStmt(
+										new Token('RETURN', 'return', undefined, 1),
+										binaryExpr(
+											variableExpr(new Token('IDENTIFIER', 'n', 'n', 1)),
+											new Token('STAR', '*', undefined, 1),
+											variableExpr(new Token('IDENTIFIER', 'n', 'n', 1))
+										)
+									)
+								]
+							)
+						)
+					]
+				)
 			])
 		})
 	})

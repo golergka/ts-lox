@@ -3,7 +3,7 @@ import { LoxClass } from "./loxClass";
 import { Token } from "./token";
 
 export class LoxInstance {
-    private readonly fields: Map<string, object|null> = new Map()
+    protected readonly fields: Map<string, object|null> = new Map()
 
     public constructor(private readonly klass: LoxClass) {}
     

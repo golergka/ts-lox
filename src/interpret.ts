@@ -286,11 +286,20 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 		case 'class': {
 			ctx.environment.define(stmt.name, null)
 			const methods: Map<string, LoxFunction> = new Map()
+			const staticMethods: Map<string, LoxFunction> = new Map()
 			for (const method of stmt.methods) {
-				const func = new LoxFunction(method.lambda, ctx.environment, method.name.lexeme === 'init')
-				methods.set(method.name.lexeme, func)
+				methods.set(
+					method.name.lexeme,
+					new LoxFunction(method.lambda, ctx.environment, method.name.lexeme === 'init')
+				)
 			}
-			const klass = new LoxClass(stmt.name.lexeme, methods)
+			for (const staticMethod of stmt.staticMethods) {
+				staticMethods.set(
+					staticMethod.name.lexeme,
+					new LoxFunction(staticMethod.lambda, ctx.environment, false)
+				)
+			}
+			const klass = new LoxClass(stmt.name.lexeme, methods, staticMethods)
 			ctx.environment.assign(stmt.name, klass)
 			return null
 		}

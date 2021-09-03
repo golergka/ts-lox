@@ -165,13 +165,13 @@ describe('resolve', () => {
 	it(`doesn't report an error for an unused class in global scope`, () => {
 		// class Foo {}
 		const stmts = [
-			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [])
+			classStmt(new Token('IDENTIFIER', 'Foo', undefined, 1), [], [])
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything())).never()
 	})
 
-	it.only('reports an error when return statement is used inside an initializer', () => {
+	it('reports an error when return statement is used inside an initializer', () => {
 		// class Foo {
 		//   init() {
 		//     return "something else";
@@ -191,7 +191,7 @@ describe('resolve', () => {
 						]
 					)
 				)
-			]),
+			], []),
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
@@ -210,7 +210,7 @@ describe('resolve', () => {
 					new Token('IDENTIFIER', 'speak', null, 1),
 					lambdaExpr([], [printStmt(varExpr)])
 				)
-			])
+			], [])
 		]
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(varExpr)).toBe(1)
@@ -245,7 +245,7 @@ describe('resolve', () => {
 						]
 					)
 				)
-			])
+			], [])
 		]
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(localFunctionExpr)).toBe(0)

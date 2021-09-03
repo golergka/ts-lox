@@ -28,7 +28,7 @@ defineAst(
 	],
 	[
 		[['Token'], '../Token'],
-		[['Stmt'], './Stmt'],
+		[['Stmt'], './Stmt']
 	]
 )
 
@@ -37,7 +37,7 @@ defineAst(
 	'Stmt',
 	[
 		'Block 		: Stmt[] statements',
-		'Class      : Token name, FunctionStmt[] methods',
+		'Class      : Token name, FunctionStmt[] methods, FunctionStmt[] staticMethods',
 		'Expression : Expr expression',
 		'Function   : Token name, LambdaExpr lambda',
 		'If         : Expr condition, Stmt consequent, Stmt|null alternative',
@@ -69,8 +69,8 @@ async function defineAst(
 		const fields: [type: string, name: string][] = rawFieldList
 			.trim()
 			.split(', ')
-			.map(rawField => rawField.trim())
-			.filter(rawField => rawField.length > 0)
+			.map((rawField) => rawField.trim())
+			.filter((rawField) => rawField.length > 0)
 			.map((rawField) => {
 				const [type, name] = rawField.split(' ')
 				return [type, name]

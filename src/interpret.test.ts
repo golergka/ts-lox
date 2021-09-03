@@ -540,20 +540,24 @@ describe('intepret', () => {
 			// }
 			// print DevonshireCream; // "Scones"
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'DevonshireCream', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'serveOn', null, 1),
-						lambdaExpr(
-							[],
-							[
-								returnStmt(
-									new Token('RETURN', 'return', null, 1),
-									literalExpr('Scones')
-								)
-							]
+				classStmt(
+					new Token('IDENTIFIER', 'DevonshireCream', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'serveOn', null, 1),
+							lambdaExpr(
+								[],
+								[
+									returnStmt(
+										new Token('RETURN', 'return', null, 1),
+										literalExpr('Scones')
+									)
+								]
+							)
 						)
-					)
-				]),
+					],
+					[]
+				),
 				printStmt(
 					variableExpr(new Token('IDENTIFIER', 'DevonshireCream', null, 1))
 				)
@@ -567,7 +571,7 @@ describe('intepret', () => {
 			// }
 			// Bagel(); // creates Bagel instance
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [], []),
 				expressionStmt(
 					callExpr(
 						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
@@ -586,7 +590,7 @@ describe('intepret', () => {
 			// var bagel = Bagel();
 			// print bagel; // prints Bagel instance
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), []),
+				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [], []),
 				varStmt(
 					new Token('IDENTIFIER', 'bagel', null, 1),
 					callExpr(
@@ -610,12 +614,16 @@ describe('intepret', () => {
 			// }
 			// Bacon().eat(); // prints "Crunch crunch crunch!"
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bacon', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'eat', null, 1),
-						lambdaExpr([], [printStmt(literalExpr('Crunch crunch crunch!'))])
-					)
-				]),
+				classStmt(
+					new Token('IDENTIFIER', 'Bacon', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'eat', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('Crunch crunch crunch!'))])
+						)
+					],
+					[]
+				),
 				expressionStmt(
 					callExpr(
 						getExpr(
@@ -646,12 +654,16 @@ describe('intepret', () => {
 			// method(); // prints "instance of Egotist"
 			const thisExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Egotist', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'speak', null, 1),
-						lambdaExpr([], [printStmt(thisExpr)])
-					)
-				]),
+				classStmt(
+					new Token('IDENTIFIER', 'Egotist', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'speak', null, 1),
+							lambdaExpr([], [printStmt(thisExpr)])
+						)
+					],
+					[]
+				),
 				varStmt(
 					new Token('IDENTIFIER', 'method', null, 1),
 					getExpr(
@@ -677,7 +689,7 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('instance of Egotist')).once()
 		})
-		
+
 		it('calls an init method when constructing an instance', () => {
 			// class Bagel {
 			//   init() {
@@ -686,12 +698,16 @@ describe('intepret', () => {
 			// }
 			// Bagel(); // prints "Bagel"
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Bagel', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'init', null, 1),
-						lambdaExpr([], [printStmt(literalExpr('Bagel'))])
-					)
-				]),
+				classStmt(
+					new Token('IDENTIFIER', 'Bagel', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'init', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('Bagel'))])
+						)
+					],
+					[]
+				),
 				expressionStmt(
 					callExpr(
 						variableExpr(new Token('IDENTIFIER', 'Bagel', null, 1)),
@@ -704,7 +720,7 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Bagel')).once()
 		})
-		
+
 		it('returns this from initializer', () => {
 			// class Foo {
 			//   init() {
@@ -713,12 +729,16 @@ describe('intepret', () => {
 			// var foo = Foo();
 			// print foo.init(); // prints "instance of Foo"
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Foo', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'init', null, 1),
-						lambdaExpr([], [])
-					)
-				]),
+				classStmt(
+					new Token('IDENTIFIER', 'Foo', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'init', null, 1),
+							lambdaExpr([], [])
+						)
+					],
+					[]
+				),
 				varStmt(
 					new Token('IDENTIFIER', 'foo', null, 1),
 					callExpr(
@@ -754,27 +774,33 @@ describe('intepret', () => {
 			// }
 			// var callback = Thing().getCallback();
 			// callback();
-			const localFunctionExpr = variableExpr(new Token('IDENTIFIER', 'localFunction', null, 1))
+			const localFunctionExpr = variableExpr(
+				new Token('IDENTIFIER', 'localFunction', null, 1)
+			)
 			const thisExpr = variableExpr(new Token('IDENTIFIER', 'this', null, 1))
 			const stmts = [
-				classStmt(new Token('IDENTIFIER', 'Thing', null, 1), [
-					functionStmt(
-						new Token('IDENTIFIER', 'getCallback', null, 1),
-						lambdaExpr(
-							[],
-							[
-								functionStmt(
-									new Token('IDENTIFIER', 'localFunction', null, 1),
-									lambdaExpr([], [printStmt(thisExpr)])
-								),
-								returnStmt(
-									new Token('RETURN', 'return', null, 1),
-									localFunctionExpr
-								)
-							]
+				classStmt(
+					new Token('IDENTIFIER', 'Thing', null, 1),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'getCallback', null, 1),
+							lambdaExpr(
+								[],
+								[
+									functionStmt(
+										new Token('IDENTIFIER', 'localFunction', null, 1),
+										lambdaExpr([], [printStmt(thisExpr)])
+									),
+									returnStmt(
+										new Token('RETURN', 'return', null, 1),
+										localFunctionExpr
+									)
+								]
+							)
 						)
-					)
-				]),
+					],
+					[]
+				),
 				varStmt(
 					new Token('IDENTIFIER', 'callback', null, 1),
 					callExpr(
@@ -803,6 +829,41 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('instance of Thing')).once()
+		})
+	
+		it('runs a static class method', () => {
+			// class Foo {
+			//   class bar() {
+			//     print "bar";
+			//   }
+			// }
+			// Foo.bar(); // prints "bar"
+			const stmts = [
+				classStmt(
+					new Token('IDENTIFIER', 'Foo', null, 1),
+					[
+					],
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'bar', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('bar'))])
+						)
+					]
+				),
+				expressionStmt(
+					callExpr(
+						getExpr(
+							variableExpr(new Token('IDENTIFIER', 'Foo', null, 1)),
+							new Token('IDENTIFIER', 'bar', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('bar')).once()
 		})
 	})
 })

@@ -1,3 +1,4 @@
+import { FunctionExpression } from 'typescript'
 import {
 	assignmentExpr,
 	binaryErrorExpr,
@@ -462,11 +463,16 @@ export function parseTokens(
 		const name = consume('IDENTIFIER', "Expect class name.")
 		consume('LEFT_BRACE', "Expect '{' before class body.")
 		const methods: FunctionStmt[] = []
+		const staticMethods: FunctionStmt[] = []
 		while (!check('RIGHT_BRACE') && !isAtEnd()) {
-			methods.push(functionDeclaration('method'))
+			if (match('CLASS')) {
+				staticMethods.push(functionDeclaration('static method'))
+			} else {
+				methods.push(functionDeclaration('method'))
+			}
 		}
 		consume('RIGHT_BRACE', "Expect '}' after class body.")
-		return classStmt(name, methods)
+		return classStmt(name, methods, staticMethods)
 	}
 
 	function variableDeclaration() {
