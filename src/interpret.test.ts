@@ -12,6 +12,7 @@ import {
 	groupingExpr,
 	lambdaExpr,
 	literalExpr,
+	superExpr,
 	variableExpr
 } from './generated/Expr'
 import {
@@ -933,6 +934,75 @@ describe('intepret', () => {
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Fry until golden brown')).once()
+		})
+	
+		it('calls a superclass method in override with super keyword', () => {
+			// class Doughnut {
+			//   cook() {
+			//     print "Fry until golden brown";
+			//   }
+			// }
+			// class BostonCream < Doughnut {
+			//   cook() {
+			//     super.cook();
+			//     print "Pipe full of custard and coat with chocolate";
+			//   }
+			// }
+			// BostonCream().cook(); // prints "Fry until golden brown" and "Pipe full of custard and coat with chocolate"
+			const stmts = [
+				classStmt(
+					new Token('IDENTIFIER', 'Doughnut', null, 1),
+					null,
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'cook', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('Fry until golden brown'))])
+						)
+					],
+					[]
+				),
+				classStmt(
+					new Token('IDENTIFIER', 'BostonCream', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'Doughnut', null, 1)),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'cook', null, 1),
+							lambdaExpr([], [
+								expressionStmt(
+									callExpr(
+										superExpr(
+											new Token('SUPER', 'super', null, 1),
+											new Token('IDENTIFIER', 'cook', null, 1),
+										),
+										new Token('LEFT_PAREN', '(', '(', 1),
+										[]
+									)
+								),
+								printStmt(literalExpr('Pipe full of custard and coat with chocolate'))
+							])
+						)
+					],
+					[]
+				),
+				expressionStmt(
+					callExpr(
+						getExpr(
+							callExpr(
+								variableExpr(new Token('IDENTIFIER', 'BostonCream', null, 1)),
+								new Token('LEFT_PAREN', '(', '(', 1),
+								[]
+							),
+							new Token('IDENTIFIER', 'cook', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('Fry until golden brown')).once()
+			verify(spyCtx.print('Pipe full of custard and coat with chocolate')).once()
 		})
 	})
 })

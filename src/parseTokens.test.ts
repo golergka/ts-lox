@@ -8,6 +8,7 @@ import {
 	lambdaExpr,
 	literalExpr,
 	setExpr,
+	superExpr,
 	thisExpr,
 	unaryExpr,
 	variableExpr
@@ -539,7 +540,7 @@ describe(`parseTokens`, () => {
 				)
 			])
 		})
-		
+
 		it('class BostonCream < Doughnut { }', () => {
 			const tokens: Token[] = [
 				new Token('CLASS', 'class', 'class', 1),
@@ -856,6 +857,28 @@ describe(`parseTokens`, () => {
 			]
 			const result = parseTokens(ctx, tokens, true)
 			expect(result).toEqual(thisExpr(new Token('THIS', 'this', undefined, 1)))
+		})
+
+		it('super.cook()', () => {
+			const tokens: Token[] = [
+				new Token('SUPER', 'super', undefined, 1),
+				new Token('DOT', '.', undefined, 1),
+				new Token('IDENTIFIER', 'cook', null, 1),
+				new Token('LEFT_PAREN', '(', undefined, 1),
+				new Token('RIGHT_PAREN', ')', undefined, 1),
+				new Token('EOF', '', undefined, 1)
+			]
+			const result = parseTokens(ctx, tokens, true)
+			expect(result).toEqual(
+				callExpr(
+					superExpr(
+						new Token('SUPER', 'super', undefined, 1),
+						new Token('IDENTIFIER', 'cook', null, 1)
+					),
+					new Token('RIGHT_PAREN', ')', undefined, 1),
+					[]
+				)
+			)
 		})
 	})
 })

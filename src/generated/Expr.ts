@@ -160,6 +160,23 @@ export function setExpr(
     }
 }
 
+export interface SuperExpr {
+    type: 'super'
+    keyword: Token
+    method: Token
+}
+
+export function superExpr(
+    keyword: Token,
+    method: Token,
+): SuperExpr {
+    return {
+        type: 'super',
+        keyword,
+        method,
+    }
+}
+
 export interface ThisExpr {
     type: 'this'
     keyword: Token
@@ -232,6 +249,7 @@ export type Expr =
     | GroupingExpr
     | LiteralExpr
     | SetExpr
+    | SuperExpr
     | ThisExpr
     | UnaryExpr
     | VariableExpr

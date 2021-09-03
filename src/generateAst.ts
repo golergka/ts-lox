@@ -21,6 +21,7 @@ defineAst(
 		'Grouping    : Expr expression',
 		'Literal     : Object|null value',
 		'Set         : Expr object, Token name, Expr value',
+		'Super       : Token keyword, Token method',
 		'This        : Token keyword',
 		'Unary       : Token operator, Expr right',
 		'Variable    : Token name',

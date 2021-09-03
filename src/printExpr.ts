@@ -34,6 +34,8 @@ export function printExpr(expr: Expr): string {
 			return '<anonymous function>'
 		case 'this':
 			return 'this'
+		case 'super':
+			return `(super ${expr.method})`
 	}
 }
 

@@ -54,5 +54,10 @@ export function rpnExpr(expr: Expr): string {
 			return '<anonymous function>'
 		case 'this':
 			return 'this'
+		case 'super':
+			return [
+				expr.method,
+				'super'
+			].join (' ')
 	}
 }

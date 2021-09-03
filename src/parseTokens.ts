@@ -13,7 +13,8 @@ import {
 	lambdaExpr,
 	getExpr,
 	setExpr,
-	thisExpr
+	thisExpr,
+	superExpr
 } from './generated/Expr'
 import {
 	blockStmt,
@@ -72,6 +73,7 @@ function exprOrStmt(input: Expr|Stmt): { type: 'expr', expr: Expr }|{ type: 'stm
 		case 'get':
 		case 'set':
 		case 'this':
+		case 'super':
 			return { type: 'expr', expr: input }
 	}
 }
@@ -135,6 +137,12 @@ export function parseTokens(
 		if (match('TRUE')) return literalExpr(true)
 		if (match('NIL')) return literalExpr(null)
 		if (match('NUMBER', 'STRING')) return literalExpr(previous().literal)
+		if (match('SUPER')) {
+			const keyword = previous()
+			consume('DOT', 'Expect `.` after `super`.')
+			const method = consume('IDENTIFIER', 'Expect superclass method name.')
+			return superExpr(keyword, method)
+		}
 		if (match('THIS')) return thisExpr(previous())
 		if (match('IDENTIFIER')) return variableExpr(previous())
 		if (match('LEFT_PAREN')) {
