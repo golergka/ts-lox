@@ -836,7 +836,7 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('instance of Thing')).once()
 		})
-	
+
 		it('runs a static class method', () => {
 			// class Foo {
 			//   class bar() {
@@ -848,8 +848,7 @@ describe('intepret', () => {
 				classStmt(
 					new Token('IDENTIFIER', 'Foo', null, 1),
 					null,
-					[
-					],
+					[],
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'bar', null, 1),
@@ -872,16 +871,13 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('bar')).once()
 		})
-		
+
 		it('reports an error when superclass is not a class', () => {
 			// var bar = 123;
 			// class Foo > bar {
 			// }
 			const stmts = [
-				varStmt(
-					new Token('IDENTIFIER', 'bar', null, 1),
-					literalExpr(123)
-				),
+				varStmt(new Token('IDENTIFIER', 'bar', null, 1), literalExpr(123)),
 				classStmt(
 					new Token('IDENTIFIER', 'Foo', null, 1),
 					variableExpr(new Token('IDENTIFIER', 'bar', null, 1)),
@@ -891,6 +887,52 @@ describe('intepret', () => {
 			]
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).once()
+		})
+
+		it('calls a method defined on a superclass', () => {
+			// class Doughnut {
+			//   cook() {
+			//     print "Fry until golden brown";
+			//   }
+			// }
+			// class BostonCream < Doughnut {}
+			// BostonCream().cook(); // prints "Fry until golden brown"
+			const stmts = [
+				classStmt(
+					new Token('IDENTIFIER', 'Doughnut', null, 1),
+					null,
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'cook', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('Fry until golden brown'))])
+						)
+					],
+					[]
+				),
+				classStmt(
+					new Token('IDENTIFIER', 'BostonCream', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'Doughnut', null, 1)),
+					[],
+					[]
+				),
+				expressionStmt(
+					callExpr(
+						getExpr(
+							callExpr(
+								variableExpr(new Token('IDENTIFIER', 'BostonCream', null, 1)),
+								new Token('LEFT_PAREN', '(', '(', 1),
+								[]
+							),
+							new Token('IDENTIFIER', 'cook', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('Fry until golden brown')).once()
 		})
 	})
 })
