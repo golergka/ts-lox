@@ -145,6 +145,17 @@ export function evaluate(ctx: InterpreterContext, expr: Expr): Object | null {
 		
 		case 'this':
 			return lookUpVariable(expr.keyword, expr)
+		
+		case 'super': {
+			const distance = ctx.locals.get(expr)!
+			const superclass = ctx.environment.getAt(distance, expr.keyword) as LoxClass
+			const object = ctx.environment.getAt(distance - 1, "this") as LoxInstance
+			const method = superclass.findMethod(expr.method.lexeme)
+			if (method === undefined) {
+				throw new RuntimeError(expr.method, `Undefined property ${expr.method.lexeme}`)
+			}
+			return method.bind(object)
+		}
 
 		case 'assignment': {
 			const value = evaluate(ctx, expr.value)
@@ -292,6 +303,12 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 				}
 			}
 			ctx.environment.define(stmt.name, null)
+			let superclassPrevEnv = null
+			if (superclass !== null) {
+				superclassPrevEnv = ctx.environment
+				ctx.environment = new Environment(ctx.environment)
+				ctx.environment.define('super', superclass)
+			}
 			const methods: Map<string, LoxFunction> = new Map()
 			const staticMethods: Map<string, LoxFunction> = new Map()
 			for (const method of stmt.methods) {
@@ -307,6 +324,9 @@ function execute(ctx: InterpreterContext, stmt: Stmt): Object | null {
 				)
 			}
 			const klass = new LoxClass(stmt.name.lexeme, superclass, methods, staticMethods)
+			if (superclassPrevEnv !== null) {
+				ctx.environment = superclassPrevEnv
+			}
 			ctx.environment.assign(stmt.name, klass)
 			return null
 		}

@@ -935,7 +935,7 @@ describe('intepret', () => {
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Fry until golden brown')).once()
 		})
-	
+
 		it('calls a superclass method in override with super keyword', () => {
 			// class Doughnut {
 			//   cook() {
@@ -949,6 +949,10 @@ describe('intepret', () => {
 			//   }
 			// }
 			// BostonCream().cook(); // prints "Fry until golden brown" and "Pipe full of custard and coat with chocolate"
+			const spr = superExpr(
+				new Token('SUPER', 'super', null, 1),
+				new Token('IDENTIFIER', 'cook', null, 1)
+			)
 			const stmts = [
 				classStmt(
 					new Token('IDENTIFIER', 'Doughnut', null, 1),
@@ -967,19 +971,17 @@ describe('intepret', () => {
 					[
 						functionStmt(
 							new Token('IDENTIFIER', 'cook', null, 1),
-							lambdaExpr([], [
-								expressionStmt(
-									callExpr(
-										superExpr(
-											new Token('SUPER', 'super', null, 1),
-											new Token('IDENTIFIER', 'cook', null, 1),
-										),
-										new Token('LEFT_PAREN', '(', '(', 1),
-										[]
+							lambdaExpr(
+								[],
+								[
+									expressionStmt(
+										callExpr(spr, new Token('LEFT_PAREN', '(', '(', 1), [])
+									),
+									printStmt(
+										literalExpr('Pipe full of custard and coat with chocolate')
 									)
-								),
-								printStmt(literalExpr('Pipe full of custard and coat with chocolate'))
-							])
+								]
+							)
 						)
 					],
 					[]
@@ -999,10 +1001,95 @@ describe('intepret', () => {
 					)
 				)
 			]
+			ctx.locals.set(spr, 2)
 			interpret(ctx, stmts)
 			verify(spyCtx.runtimeError(anything())).never()
 			verify(spyCtx.print('Fry until golden brown')).once()
-			verify(spyCtx.print('Pipe full of custard and coat with chocolate')).once()
+			verify(
+				spyCtx.print('Pipe full of custard and coat with chocolate')
+			).once()
+		})
+
+		it('calls a superclass method and not current class override with super keyword', () => {
+			// class A {
+			//   method() {
+			//     print "A method";
+			//   }
+			// }
+			// class B < A {
+			//   method() {
+			// 	   print "B method";
+			//   }
+			//   test() {
+			//     super.method();
+			//   }
+			// }
+			// class C < B {}
+			// C().test(); // prints "A method"
+			const spr = superExpr(
+				new Token('SUPER', 'super', null, 1),
+				new Token('IDENTIFIER', 'method', null, 1)
+			)
+			const stmts = [
+				classStmt(
+					new Token('IDENTIFIER', 'A', null, 1),
+					null,
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'method', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('A method'))])
+						)
+					],
+					[]
+				),
+				classStmt(
+					new Token('IDENTIFIER', 'B', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'A', null, 1)),
+					[
+						functionStmt(
+							new Token('IDENTIFIER', 'method', null, 1),
+							lambdaExpr([], [printStmt(literalExpr('B method'))])
+						),
+						functionStmt(
+							new Token('IDENTIFIER', 'test', null, 1),
+							lambdaExpr(
+								[],
+								[
+									expressionStmt(
+										callExpr(spr, new Token('LEFT_PAREN', '(', '(', 1), [])
+									)
+								]
+							)
+						)
+					],
+					[]
+				),
+				classStmt(
+					new Token('IDENTIFIER', 'C', null, 1),
+					variableExpr(new Token('IDENTIFIER', 'B', null, 1)),
+					[],
+					[]
+				),
+				expressionStmt(
+					callExpr(
+						getExpr(
+							callExpr(
+								variableExpr(new Token('IDENTIFIER', 'C', null, 1)),
+								new Token('LEFT_PAREN', '(', '(', 1),
+								[]
+							),
+							new Token('IDENTIFIER', 'test', null, 1)
+						),
+						new Token('LEFT_PAREN', '(', '(', 1),
+						[]
+					)
+				)
+			]
+			ctx.locals.set(spr, 2)
+			interpret(ctx, stmts)
+			verify(spyCtx.runtimeError(anything())).never()
+			verify(spyCtx.print('A method')).once()
+			verify(spyCtx.print('B method')).never()
 		})
 	})
 })

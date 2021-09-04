@@ -155,6 +155,10 @@ export function resolve(
 				}
 				return true
 			}
+			case 'super': {
+				resolveLocal(expr, expr.keyword)
+				return true
+			}
 			case 'grouping': {
 				resolveExpr(expr.expression)
 				return true
@@ -194,6 +198,12 @@ export function resolve(
 						error(stmt.superclass.name, 'A class cannot inherit from itself')
 					}
 					resolveLocal(stmt.superclass, stmt.superclass.name)
+					beginScope()
+					peekScope().set('super', {
+						defined: true,
+						used: true,
+						name: stmt.superclass.name,
+					})
 				}
 				beginScope()
 				peekScope().set('this', { defined: true, used: true, name: stmt.name })
@@ -203,6 +213,9 @@ export function resolve(
 					resolveFunction(method.lambda, declaration)
 				}
 				endScope()
+				if (stmt.superclass !== null) {
+					endScope()
+				}
 				currentClass = enclosingClass
 				return true
 			}

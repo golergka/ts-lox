@@ -1,8 +1,10 @@
 import { mock, instance, verify, anything } from 'ts-mockito'
 import {
 	binaryExpr,
+	callExpr,
 	lambdaExpr,
 	literalExpr,
+	superExpr,
 	thisExpr,
 	variableExpr
 } from './generated/Expr'
@@ -262,8 +264,8 @@ describe('resolve', () => {
 		const { locals } = resolve(ctx, stmts)
 		expect(locals.get(localFunctionExpr)).toBe(0)
 	})
-	
-	it('reports an error when a class is used as it\'s own superclass', () => {
+
+	it("reports an error when a class is used as it's own superclass", () => {
 		// class Oops < Oops {}
 		const stmts = [
 			classStmt(
@@ -275,5 +277,65 @@ describe('resolve', () => {
 		]
 		resolve(ctx, stmts)
 		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+
+	it('resolves a super keyword', () => {
+		// class Doughnut {
+		//   cook() {
+		//     print "Fry until golden brown";
+		//   }
+		// }
+		// class BostonCream < Doughnut {
+		//   cook() {
+		//     super.cook();
+		//   }
+		// }
+
+		// I got this girl and she wants me to duke her
+		// I told he I'd scoop her around 8 and she said
+		const spr = superExpr(
+			// That sounds great, surely girls' a trooper
+			// Whatever I need her do to she is like
+			new Token('SUPER', 'super', null, 1),
+			new Token('IDENTIFIER', 'cook', null, 1)
+		)
+		const stmts = [
+			classStmt(
+				new Token('IDENTIFIER', 'Doughnut', null, 1),
+				null,
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'cook', null, 1),
+						lambdaExpr([], [printStmt(literalExpr('Fry until golden brown'))])
+					)
+				],
+				[]
+			),
+			classStmt(
+				new Token('IDENTIFIER', 'BostonCream', null, 1),
+				variableExpr(new Token('IDENTIFIER', 'Doughnut', null, 1)),
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'cook', null, 1),
+						lambdaExpr(
+							[],
+							[
+								expressionStmt(
+									callExpr(
+										// On his own throne, the boss like King Kupah
+										// On the microphone, he flossed the ring
+										spr,
+										new Token('LEFT_PAREN', '(', null, 1), [])
+								)
+							]
+						)
+					)
+				],
+				[]
+			)
+		]
+		const { locals } = resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).never()
+		expect(locals.get(spr)).toBe(2)
 	})
 })
