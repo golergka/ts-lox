@@ -338,4 +338,56 @@ describe('resolve', () => {
 		verify(mockedCtx.parserError(anything(), anything(), anything())).never()
 		expect(locals.get(spr)).toBe(2)
 	})
+	
+	it('reports an error when super is used within a class without a superclass', () => {
+		// class Oops {
+		//   cook() {
+		//     super.cook();
+		//   }
+		// }
+		const stmts = [
+			classStmt(
+				new Token('IDENTIFIER', 'Oops', null, 1),
+				null,
+				[
+					functionStmt(
+						new Token('IDENTIFIER', 'cook', null, 1),
+						lambdaExpr(
+							[],
+							[
+								expressionStmt(
+									callExpr(
+										superExpr(
+											new Token('SUPER', 'super', null, 1),
+											new Token('IDENTIFIER', 'cook', null, 1)
+										),
+										new Token('LEFT_PAREN', '(', null, 1), [])
+								)
+							]
+						)
+					)
+				],
+				[]
+			)
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
+	
+	it('reports an error when super is used outside of a class method', () => {
+		// super.notEvenInAClass();
+		const stmts = [
+			expressionStmt(
+				callExpr(
+					superExpr(
+						new Token('SUPER', 'super', null, 1),
+						new Token('IDENTIFIER', 'notEvenInAClass', null, 1)
+					),
+					new Token('LEFT_PAREN', '(', null, 1), []
+				)
+			)
+		]
+		resolve(ctx, stmts)
+		verify(mockedCtx.parserError(anything(), anything(), anything())).once()
+	})
 })

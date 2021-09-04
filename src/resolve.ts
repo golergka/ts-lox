@@ -5,7 +5,7 @@ import { ParserContext } from './parseTokens'
 import { Token } from './Token'
 
 type FunctionType = 'function' | 'none' | 'method' | 'initializer'
-type ClassType = 'none' | 'class'
+type ClassType = 'none' | 'class' | 'subclass'
 
 export function resolve(
 	ctx: ParserContext,
@@ -156,7 +156,13 @@ export function resolve(
 				return true
 			}
 			case 'super': {
-				resolveLocal(expr, expr.keyword)
+				if (currentClass === 'none') {
+					error(expr.keyword, 'Cannot use `super` outside of a class')
+				} else if (currentClass === 'class') {
+					error(expr.keyword, 'Cannot use `super` in a class with no superclass')
+				} else {
+					resolveLocal(expr, expr.keyword)
+				}
 				return true
 			}
 			case 'grouping': {
@@ -194,6 +200,7 @@ export function resolve(
 				declare(stmt.name)
 				define(stmt.name)
 				if (stmt.superclass !== null) {
+					currentClass = 'subclass'
 					if (stmt.name.lexeme === stmt.superclass.name.lexeme) {
 						error(stmt.superclass.name, 'A class cannot inherit from itself')
 					}
